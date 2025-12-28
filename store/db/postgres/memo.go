@@ -151,12 +151,13 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 	for rows.Next() {
 		var memo store.Memo
 		var payloadBytes []byte
+		var createdTs, updatedTs sql.NullInt64
 		dests := []any{
 			&memo.ID,
 			&memo.UID,
 			&memo.CreatorID,
-			&memo.CreatedTs,
-			&memo.UpdatedTs,
+			&createdTs,
+			&updatedTs,
 			&memo.RowStatus,
 			&memo.Visibility,
 			&memo.Pinned,
@@ -168,6 +169,12 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		}
 		if err := rows.Scan(dests...); err != nil {
 			return nil, err
+		}
+		if createdTs.Valid {
+			memo.CreatedTs = createdTs.Int64
+		}
+		if updatedTs.Valid {
+			memo.UpdatedTs = updatedTs.Int64
 		}
 		payload := &storepb.MemoPayload{}
 		if err := protojsonUnmarshaler.Unmarshal(payloadBytes, payload); err != nil {

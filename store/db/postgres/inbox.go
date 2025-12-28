@@ -53,7 +53,7 @@ func (d *DB) ListInboxes(ctx context.Context, find *store.FindInbox) ([]*store.I
 	if find.MessageType != nil {
 		// Filter by message type using PostgreSQL JSON extraction
 		// Note: The type field in JSON is stored as string representation of the enum name
-		where, args = append(where, "message->>'type' = "+placeholder(len(args)+1)), append(args, find.MessageType.String())
+		where, args = append(where, "message::jsonb->>'type' = "+placeholder(len(args)+1)), append(args, find.MessageType.String())
 	}
 
 	query := "SELECT id, created_ts, sender_id, receiver_id, status, message FROM inbox WHERE " + strings.Join(where, " AND ") + " ORDER BY created_ts DESC"
