@@ -84,7 +84,7 @@ const Setting = () => {
   }, []);
 
   return (
-    <section className="@container w-full max-w-5xl min-h-full flex flex-col justify-start items-start sm:pt-3 md:pt-6 pb-8">
+    <section className="@container w-full max-w-7xl min-h-full flex flex-col justify-start items-start sm:pt-3 md:pt-6 pb-8">
       {!sm && <MobileHeader />}
       <div className="w-full px-4 sm:px-6">
         <div className="w-full border border-border flex flex-row justify-start items-start px-4 py-3 rounded-xl bg-background text-muted-foreground">
@@ -104,7 +104,7 @@ const Setting = () => {
               </div>
               {isHost ? (
                 <>
-                  <span className="text-sm mt-4 pl-3 font-mono select-none text-muted-foreground">{t("common.admin")}</span>
+                  <span className="text-sm mt-8 pl-3 font-mono select-none text-muted-foreground">{t("common.admin")}</span>
                   <div className="w-full flex flex-col justify-start items-start mt-1">
                     {ADMIN_SECTIONS.map((item) => (
                       <SectionMenuItem
