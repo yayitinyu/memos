@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { Maximize2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { validationService } from "../services";
 import { useEditorContext } from "../state";
