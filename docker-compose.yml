@@ -1,0 +1,21 @@
+services:
+  memos:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: memos:local
+    container_name: memos
+    restart: always
+    ports:
+      - "5230:5230"
+    volumes:
+      - ./memos_data:/var/opt/memos
+    environment:
+      - MEMOS_MODE=prod
+      - MEMOS_PORT=5230
+      # Use SQLite by default
+      - MEMOS_DRIVER=sqlite
+      - MEMOS_DSN=/var/opt/memos/memos.db
+      # For MySQL/PostgreSQL, uncomment and configure:
+      # - MEMOS_DRIVER=mysql
+      # - MEMOS_DSN=user:password@tcp(host:3306)/memos
