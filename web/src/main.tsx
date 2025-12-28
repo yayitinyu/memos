@@ -38,6 +38,21 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     init();
   }, [initAuth, initInstance]);
 
+  // Re-validate auth when page becomes visible after being hidden
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && authInitialized) {
+        // Re-check auth when user comes back to the page
+        initAuth();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [authInitialized, initAuth]);
+
   if (!authInitialized || !instanceInitialized) {
     return undefined;
   }

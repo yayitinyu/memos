@@ -91,6 +91,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isInitialized: true,
         isLoading: false,
       });
+      
+      // Redirect to login page on auth failure (token expired, etc.)
+      // Import dynamically to avoid circular dependencies
+      import("@/utils/auth-redirect").then(({ redirectOnAuthFailure }) => {
+        redirectOnAuthFailure();
+      });
     }
   }, [fetchUserSettings, queryClient]);
 
