@@ -378,6 +378,7 @@ message UserSetting {
   oneof value {
     GeneralSetting general_setting = 2;
     WebhooksSetting webhooks_setting = 5;
+    RefreshTokensSetting refresh_tokens_setting = 6;
   }
 
   // Enumeration of user setting keys.
@@ -387,6 +388,8 @@ message UserSetting {
     GENERAL = 1;
     // WEBHOOKS is the key for user webhooks.
     WEBHOOKS = 4;
+    // REFRESH_TOKENS is the key for refresh tokens.
+    REFRESH_TOKENS = 6;
   }
 
   // General user settings configuration.
@@ -405,6 +408,38 @@ message UserSetting {
   message WebhooksSetting {
     // List of user webhooks.
     repeated UserWebhook webhooks = 1;
+  }
+
+  // Refresh tokens configuration.
+  message RefreshTokensSetting {
+    // List of refresh tokens.
+    repeated RefreshToken refresh_tokens = 1;
+
+    message RefreshToken {
+      // Unique identifier (matches 'tid' claim in JWT)
+      string token_id = 1;
+      // When the token expires
+      google.protobuf.Timestamp expires_at = 2;
+      // When the token was created
+      google.protobuf.Timestamp created_at = 3;
+      // Client information for session management UI
+      ClientInfo client_info = 4;
+      // Optional description
+      string description = 5;
+
+      message ClientInfo {
+        // User agent string of the client.
+        string user_agent = 1;
+        // IP address of the client.
+        string ip_address = 2;
+        // Optional. Device type (e.g., "mobile", "desktop", "tablet").
+        string device_type = 3;
+        // Optional. Operating system (e.g., "iOS 17.0", "Windows 11").
+        string os = 4;
+        // Optional. Browser name and version (e.g., "Chrome 119.0").
+        string browser = 5;
+      }
+    }
   }
 }
 

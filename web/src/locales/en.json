@@ -43,6 +43,7 @@
     "description": "Description",
     "edit": "Edit",
     "email": "Email",
+    "error": "Error",
     "expand": "Expand",
     "explore": "Explore",
     "file": "File",
@@ -322,6 +323,12 @@
     "shortcut": {
       "delete-confirm": "Are you sure you want to delete shortcut `{{title}}`?",
       "delete-success": "Shortcut `{{title}}` deleted successfully"
+    },
+    "sign-in-section": {
+      "title": "Sessions",
+      "description": "Manage your active sessions.",
+      "device": "Device",
+      "history": "History"
     },
     "sso": "SSO",
     "sso-section": {

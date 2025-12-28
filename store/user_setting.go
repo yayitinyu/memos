@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -143,6 +144,16 @@ func (s *Store) AddUserRefreshToken(ctx context.Context, userID int32, token *st
 	if err != nil {
 		return err
 	}
+
+	// Prune expired tokens.
+	validTokens := []*storepb.RefreshTokensUserSetting_RefreshToken{}
+	now := time.Now()
+	for _, t := range tokens {
+		if t.ExpiresAt != nil && t.ExpiresAt.AsTime().After(now) {
+			validTokens = append(validTokens, t)
+		}
+	}
+	tokens = validTokens
 
 	tokens = append(tokens, token)
 

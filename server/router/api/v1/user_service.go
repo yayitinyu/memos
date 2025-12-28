@@ -987,6 +987,8 @@ func convertSettingKeyToStore(key string) (storepb.UserSetting_Key, error) {
 		return storepb.UserSetting_GENERAL, nil
 	case v1pb.UserSetting_Key_name[int32(v1pb.UserSetting_WEBHOOKS)]:
 		return storepb.UserSetting_WEBHOOKS, nil
+	case v1pb.UserSetting_Key_name[int32(v1pb.UserSetting_REFRESH_TOKENS)]:
+		return storepb.UserSetting_REFRESH_TOKENS, nil
 	default:
 		return storepb.UserSetting_KEY_UNSPECIFIED, errors.Errorf("unknown setting key: %s", key)
 	}
@@ -1001,6 +1003,8 @@ func convertSettingKeyFromStore(key storepb.UserSetting_Key) string {
 		return "SHORTCUTS" // Not defined in API proto
 	case storepb.UserSetting_WEBHOOKS:
 		return v1pb.UserSetting_Key_name[int32(v1pb.UserSetting_WEBHOOKS)]
+	case storepb.UserSetting_REFRESH_TOKENS:
+		return v1pb.UserSetting_Key_name[int32(v1pb.UserSetting_REFRESH_TOKENS)]
 	default:
 		return "unknown"
 	}
@@ -1020,6 +1024,12 @@ func convertUserSettingFromStore(storeSetting *storepb.UserSetting, userID int32
 			setting.Value = &v1pb.UserSetting_WebhooksSetting_{
 				WebhooksSetting: &v1pb.UserSetting_WebhooksSetting{
 					Webhooks: []*v1pb.UserWebhook{},
+				},
+			}
+		case storepb.UserSetting_REFRESH_TOKENS:
+			setting.Value = &v1pb.UserSetting_RefreshTokensSetting_{
+				RefreshTokensSetting: &v1pb.UserSetting_RefreshTokensSetting{
+					RefreshTokens: []*v1pb.UserSetting_RefreshTokensSetting_RefreshToken{},
 				},
 			}
 		default:
@@ -1065,6 +1075,32 @@ func convertUserSettingFromStore(storeSetting *storepb.UserSetting, userID int32
 		setting.Value = &v1pb.UserSetting_WebhooksSetting_{
 			WebhooksSetting: &v1pb.UserSetting_WebhooksSetting{
 				Webhooks: apiWebhooks,
+			},
+		}
+	case storepb.UserSetting_REFRESH_TOKENS:
+		refreshTokens := storeSetting.GetRefreshTokens()
+		apiRefreshTokens := make([]*v1pb.UserSetting_RefreshTokensSetting_RefreshToken, 0, len(refreshTokens.RefreshTokens))
+		for _, token := range refreshTokens.RefreshTokens {
+			apiToken := &v1pb.UserSetting_RefreshTokensSetting_RefreshToken{
+				TokenId:     token.TokenId,
+				ExpiresAt:   token.ExpiresAt,
+				CreatedAt:   token.CreatedAt,
+				Description: token.Description,
+			}
+			if token.ClientInfo != nil {
+				apiToken.ClientInfo = &v1pb.UserSetting_RefreshTokensSetting_RefreshToken_ClientInfo{
+					UserAgent:  token.ClientInfo.UserAgent,
+					IpAddress:  token.ClientInfo.IpAddress,
+					DeviceType: token.ClientInfo.DeviceType,
+					Os:         token.ClientInfo.Os,
+					Browser:    token.ClientInfo.Browser,
+				}
+			}
+			apiRefreshTokens = append(apiRefreshTokens, apiToken)
+		}
+		setting.Value = &v1pb.UserSetting_RefreshTokensSetting_{
+			RefreshTokensSetting: &v1pb.UserSetting_RefreshTokensSetting{
+				RefreshTokens: apiRefreshTokens,
 			},
 		}
 	default:
@@ -1115,6 +1151,35 @@ func convertUserSettingToStore(apiSetting *v1pb.UserSetting, userID int32, key s
 			}
 		} else {
 			return nil, errors.Errorf("webhooks setting is required")
+		}
+	case storepb.UserSetting_REFRESH_TOKENS:
+		if refreshTokens := apiSetting.GetRefreshTokensSetting(); refreshTokens != nil {
+			storeTokens := make([]*storepb.RefreshTokensUserSetting_RefreshToken, 0, len(refreshTokens.RefreshTokens))
+			for _, token := range refreshTokens.RefreshTokens {
+				storeToken := &storepb.RefreshTokensUserSetting_RefreshToken{
+					TokenId:     token.TokenId,
+					ExpiresAt:   token.ExpiresAt,
+					CreatedAt:   token.CreatedAt,
+					Description: token.Description,
+				}
+				if token.ClientInfo != nil {
+					storeToken.ClientInfo = &storepb.RefreshTokensUserSetting_ClientInfo{
+						UserAgent:  token.ClientInfo.UserAgent,
+						IpAddress:  token.ClientInfo.IpAddress,
+						DeviceType: token.ClientInfo.DeviceType,
+						Os:         token.ClientInfo.Os,
+						Browser:    token.ClientInfo.Browser,
+					}
+				}
+				storeTokens = append(storeTokens, storeToken)
+			}
+			storeSetting.Value = &storepb.UserSetting_RefreshTokens{
+				RefreshTokens: &storepb.RefreshTokensUserSetting{
+					RefreshTokens: storeTokens,
+				},
+			}
+		} else {
+			return nil, errors.Errorf("refresh tokens setting is required")
 		}
 	default:
 		return nil, errors.Errorf("unsupported setting key: %v", key)
