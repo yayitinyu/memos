@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -39,9 +40,13 @@ func (d *DB) CreateMemo(ctx context.Context, create *store.Memo) (*store.Memo, e
 
 	if createdTs.Valid {
 		create.CreatedTs = createdTs.Int64
+	} else {
+		create.CreatedTs = time.Now().Unix()
 	}
 	if updatedTs.Valid {
 		create.UpdatedTs = updatedTs.Int64
+	} else {
+		create.UpdatedTs = time.Now().Unix()
 	}
 
 	return create, nil
@@ -172,9 +177,13 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		}
 		if createdTs.Valid {
 			memo.CreatedTs = createdTs.Int64
+		} else {
+			memo.CreatedTs = time.Now().Unix()
 		}
 		if updatedTs.Valid {
 			memo.UpdatedTs = updatedTs.Int64
+		} else {
+			memo.UpdatedTs = time.Now().Unix()
 		}
 		payload := &storepb.MemoPayload{}
 		if err := protojsonUnmarshaler.Unmarshal(payloadBytes, payload); err != nil {

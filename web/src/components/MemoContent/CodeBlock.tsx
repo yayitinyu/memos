@@ -115,11 +115,11 @@ export const CodeBlock = ({ children, className, ...props }: CodeBlockProps) => 
 
   return (
     <div className={cn("relative flex flex-col rounded-md border border-border overflow-hidden my-2", className)}>
-      <div className="flex flex-row justify-between items-center bg-muted/50 px-3 py-1.5 border-b border-border">
-        <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider select-none">{language}</span>
+      <div className="flex flex-row justify-between items-center bg-muted/30 px-3 py-1.5 border-b border-border/50">
+        <span className="text-sm text-muted-foreground font-mono select-none opacity-80">{language}</span>
         <button
           onClick={handleCopy}
-          className={cn("rounded-md transition-all p-1 hover:bg-background/80", copied ? "text-primary bg-background/50" : "text-muted-foreground")}
+          className={cn("rounded-sm transition-all p-1 hover:bg-background/80 opacity-80 hover:opacity-100", copied ? "text-primary" : "text-muted-foreground")}
           aria-label={copied ? "Copied" : "Copy code"}
           title={copied ? "Copied!" : "Copy code"}
         >
@@ -127,7 +127,7 @@ export const CodeBlock = ({ children, className, ...props }: CodeBlockProps) => 
         </button>
       </div>
       <div className="w-full overflow-auto bg-background p-3" {...props}>
-        <code className={`language-${language} bg-transparent p-0 block`} dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+        <code className={`language-${language} bg-transparent p-0 block font-mono text-sm leading-relaxed`} dangerouslySetInnerHTML={{ __html: highlightedCode }} />
       </div>
     </div>
   );
