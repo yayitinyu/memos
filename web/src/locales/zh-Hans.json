@@ -152,6 +152,7 @@
     "copy-content": "复制内容",
     "count-memos-in-date": "{{date}} 有 {{count}} 条备忘录",
     "delete-confirm": "您确定要删除此条备忘录吗？（此操作不可逆）",
+    "delete-confirm-description": "此操作不可逆。附件、链接和引用也将被删除。",
     "direction": "排序方式",
     "direction-asc": "正序",
     "direction-desc": "倒序",

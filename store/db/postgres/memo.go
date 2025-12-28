@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -26,13 +27,21 @@ func (d *DB) CreateMemo(ctx context.Context, create *store.Memo) (*store.Memo, e
 	args := []any{create.UID, create.CreatorID, create.Content, create.Visibility, payload}
 
 	stmt := "INSERT INTO memo (" + strings.Join(fields, ", ") + ") VALUES (" + placeholders(len(args)) + ") RETURNING id, created_ts, updated_ts, row_status"
+	var createdTs, updatedTs sql.NullInt64
 	if err := d.db.QueryRowContext(ctx, stmt, args...).Scan(
 		&create.ID,
-		&create.CreatedTs,
-		&create.UpdatedTs,
+		&createdTs,
+		&updatedTs,
 		&create.RowStatus,
 	); err != nil {
 		return nil, err
+	}
+
+	if createdTs.Valid {
+		create.CreatedTs = createdTs.Int64
+	}
+	if updatedTs.Valid {
+		create.UpdatedTs = updatedTs.Int64
 	}
 
 	return create, nil
