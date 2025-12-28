@@ -69,6 +69,12 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!isFocusMode) {
+      updateEditorHeight();
+    }
+  }, [isFocusMode, updateEditorHeight]);
+
   // Update editor when content is externally changed (e.g., reset after save)
   useEffect(() => {
     if (editorRef.current && editorRef.current.value !== initialContent) {

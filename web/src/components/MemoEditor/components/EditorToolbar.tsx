@@ -1,6 +1,7 @@
 import type { FC } from "react";
-import { Maximize2Icon } from "lucide-react";
+import { Maximize2Icon, Minimize2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslate } from "@/utils/i18n";
 import { validationService } from "../services";
 import { useEditorContext } from "../state";
 import InsertMenu from "../Toolbar/InsertMenu";
@@ -8,6 +9,7 @@ import VisibilitySelector from "../Toolbar/VisibilitySelector";
 import type { EditorToolbarProps } from "../types";
 
 export const EditorToolbar: FC<EditorToolbarProps> = ({ onSave, onCancel, memoName }) => {
+  const t = useTranslate();
   const { state, actions, dispatch } = useEditorContext();
   const { valid } = validationService.canSave(state);
 
@@ -38,19 +40,19 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({ onSave, onCancel, memoNa
       </div>
 
       <div className="flex flex-row justify-end items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={handleToggleFocusMode} title="Focus Mode">
-          <Maximize2Icon className="w-5 h-5 text-muted-foreground" />
+        <Button variant="ghost" size="icon" onClick={handleToggleFocusMode} title={state.ui.isFocusMode ? t("editor.exit-focus-mode") : t("editor.focus-mode")}>
+          {state.ui.isFocusMode ? <Minimize2Icon className="w-5 h-5 text-muted-foreground" /> : <Maximize2Icon className="w-5 h-5 text-muted-foreground" />}
         </Button>
         <VisibilitySelector value={state.metadata.visibility} onChange={handleVisibilityChange} />
 
         {onCancel && (
           <Button variant="ghost" onClick={onCancel} disabled={isSaving}>
-            Cancel
+            {t("common.cancel")}
           </Button>
         )}
 
         <Button onClick={onSave} disabled={!valid || isSaving}>
-          {isSaving ? "Saving..." : "Save"}
+          {isSaving ? t("common.saving") : t("common.save")}
         </Button>
       </div>
     </div>

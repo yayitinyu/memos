@@ -26,6 +26,7 @@
     "avatar": "头像",
     "basic": "基础",
     "beta": "测试",
+    "calendar": "日历",
     "cancel": "取消",
     "change": "修改",
     "clear": "清除",
@@ -80,6 +81,7 @@
     "restore": "恢复",
     "role": "身份",
     "save": "保存",
+    "saving": "保存中...",
     "search": "搜索",
     "select": "选择",
     "settings": "设置",
@@ -127,7 +129,10 @@
   "inbox": {
     "memo-comment": "{{user}} 评论了您的“{{memo}}”。",
     "version-update": "新版本 {{version}} 现已推出！",
-    "failed-to-load": "加载失败"
+    "failed-to-load": "加载失败",
+    "unread": "未读",
+    "no-unread": "无未读通知",
+    "no-archived": "无归档通知"
   },
   "markdown": {
     "checkbox": "复选框",

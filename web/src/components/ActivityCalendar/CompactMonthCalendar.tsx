@@ -31,6 +31,11 @@ export const CompactMonthCalendar = memo((props: CompactMonthCalendarProps) => {
 
   return (
     <div className={cn("grid grid-cols-7", sizeConfig.gap)}>
+      {weekDays.map((day) => (
+        <div key={day} className={cn("text-center text-muted-foreground opacity-60", sizeConfig.font, "h-auto")}>
+          {day}
+        </div>
+      ))}
       {weeks.map((week, weekIndex) =>
         week.days.map((day, dayIndex) => {
           const tooltipText = getTooltipText(day.count, day.date, t);

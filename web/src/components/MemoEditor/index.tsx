@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { memoKeys } from "@/hooks/useMemoQueries";
@@ -8,7 +8,7 @@ import { handleError } from "@/lib/error";
 import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
 
-import { EditorContent, EditorMetadata, EditorToolbar, FocusModeExitButton, FocusModeOverlay } from "./components";
+import { EditorContent, EditorMetadata, EditorToolbar, FocusModeOverlay } from "./components";
 import { FOCUS_MODE_STYLES } from "./constants";
 import type { EditorRefActions } from "./Editor";
 import MarkdownToolbar from "./Toolbar/MarkdownToolbar";
@@ -65,6 +65,14 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   const handleToggleFocusMode = () => {
     dispatch(actions.toggleFocusMode());
   };
+
+  useEffect(() => {
+    if (state.ui.isFocusMode) {
+      setTimeout(() => {
+        editorRef.current?.focus();
+      }, 100);
+    }
+  }, [state.ui.isFocusMode]);
 
   // Keyboard shortcuts
   useKeyboard(editorRef, { onSave: handleSave, onToggleFocusMode: handleToggleFocusMode });
@@ -137,8 +145,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
           className,
         )}
       >
-        {/* Exit button is absolutely positioned in top-right corner when active */}
-        <FocusModeExitButton isActive={state.ui.isFocusMode} onToggle={handleToggleFocusMode} title={t("editor.exit-focus-mode")} />
+
 
         {state.ui.isFocusMode && (
           <MarkdownToolbar
