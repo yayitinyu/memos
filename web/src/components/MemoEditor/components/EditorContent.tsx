@@ -41,6 +41,7 @@ export const EditorContent = forwardRef<EditorRefActions, EditorContentProps>(({
         initialContent={state.content}
         placeholder={placeholder || ""}
         isFocusMode={state.ui.isFocusMode}
+        showLineNumbers={props.showLineNumbers}
         isInIME={state.ui.isComposing}
         onContentChange={handleContentChange}
         onPaste={handlePaste}

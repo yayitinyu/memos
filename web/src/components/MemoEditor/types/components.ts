@@ -87,6 +87,7 @@ export interface EditorProps {
   onContentChange: (content: string) => void;
   onPaste: (event: React.ClipboardEvent) => void;
   isFocusMode?: boolean;
+  showLineNumbers?: boolean;
   isInIME?: boolean;
   onCompositionStart?: () => void;
   onCompositionEnd?: () => void;

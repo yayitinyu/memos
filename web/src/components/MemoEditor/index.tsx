@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { memoKeys } from "@/hooks/useMemoQueries";
@@ -7,9 +7,11 @@ import { userKeys } from "@/hooks/useUserQueries";
 import { handleError } from "@/lib/error";
 import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
+
 import { EditorContent, EditorMetadata, EditorToolbar, FocusModeExitButton, FocusModeOverlay } from "./components";
 import { FOCUS_MODE_STYLES } from "./constants";
 import type { EditorRefActions } from "./Editor";
+import MarkdownToolbar from "./Toolbar/MarkdownToolbar";
 import { useAutoSave, useFocusMode, useKeyboard, useMemoInit } from "./hooks";
 import { cacheService, errorService, memoService, validationService } from "./services";
 import { EditorProvider, useEditorContext } from "./state";
@@ -47,8 +49,10 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   const t = useTranslate();
   const queryClient = useQueryClient();
   const currentUser = useCurrentUser();
+
   const editorRef = useRef<EditorRefActions>(null);
   const { state, actions, dispatch } = useEditorContext();
+  const [showLineNumbers, setShowLineNumbers] = useState(false);
 
   useMemoInit(editorRef, memoName, cacheKey, currentUser?.name ?? "", autoFocus);
 
@@ -136,8 +140,16 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
         {/* Exit button is absolutely positioned in top-right corner when active */}
         <FocusModeExitButton isActive={state.ui.isFocusMode} onToggle={handleToggleFocusMode} title={t("editor.exit-focus-mode")} />
 
+        {state.ui.isFocusMode && (
+          <MarkdownToolbar
+            editorRef={editorRef}
+            showLineNumbers={showLineNumbers}
+            toggleShowLineNumbers={() => setShowLineNumbers(!showLineNumbers)}
+          />
+        )}
+
         {/* Editor content grows to fill available space in focus mode */}
-        <EditorContent ref={editorRef} placeholder={placeholder} autoFocus={autoFocus} />
+        <EditorContent ref={editorRef} placeholder={placeholder} autoFocus={autoFocus} showLineNumbers={showLineNumbers} />
 
         {/* Metadata and toolbar grouped together at bottom */}
         <div className="w-full flex flex-col gap-2">

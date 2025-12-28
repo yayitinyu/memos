@@ -1,6 +1,11 @@
 import { HelpCircleIcon } from "lucide-react";
 import React from "react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 interface SettingRowProps {
@@ -12,12 +17,34 @@ interface SettingRowProps {
   vertical?: boolean;
 }
 
-const SettingRow: React.FC<SettingRowProps> = ({ label, description, tooltip, children, className, vertical = false }) => {
+const SettingRow: React.FC<SettingRowProps> = ({
+  label,
+  description,
+  tooltip,
+  children,
+  className,
+  vertical = false,
+}) => {
   return (
-    <div className={cn("w-full flex gap-3", vertical ? "flex-col" : "flex-row justify-between items-center", className)}>
-      <div className={cn("flex flex-col gap-1", vertical ? "w-full" : "flex-1 min-w-0")}>
+    <div
+      className={cn(
+        "w-full flex gap-3",
+        vertical
+          ? "flex-col"
+          : "flex-col items-start sm:flex-row sm:justify-between sm:items-center",
+        className
+      )}
+    >
+      <div
+        className={cn(
+          "flex flex-col gap-1",
+          vertical ? "w-full" : "flex-1 min-w-0"
+        )}
+      >
         <div className="flex items-center gap-1.5">
-          <span className={cn("text-sm", vertical ? "font-medium" : "")}>{label}</span>
+          <span className={cn("text-sm", vertical ? "font-medium" : "")}>
+            {label}
+          </span>
           {tooltip && (
             <TooltipProvider>
               <Tooltip>
@@ -31,9 +58,15 @@ const SettingRow: React.FC<SettingRowProps> = ({ label, description, tooltip, ch
             </TooltipProvider>
           )}
         </div>
-        {description && <p className="text-xs text-muted-foreground">{description}</p>}
+        {description && (
+          <p className="text-xs text-muted-foreground">{description}</p>
+        )}
       </div>
-      <div className={cn("flex items-center", vertical ? "w-full" : "shrink-0")}>{children}</div>
+      <div
+        className={cn("flex items-center", vertical ? "w-full" : "shrink-0")}
+      >
+        {children}
+      </div>
     </div>
   );
 };

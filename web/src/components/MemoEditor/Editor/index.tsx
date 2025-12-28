@@ -31,11 +31,19 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
     onPaste,
     onContentChange: handleContentChangeCallback,
     isFocusMode,
+    showLineNumbers,
     isInIME = false,
     onCompositionStart,
     onCompositionEnd,
   } = props;
   const editorRef = useRef<HTMLTextAreaElement>(null);
+  const lineNumbersRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    if (lineNumbersRef.current) {
+      lineNumbersRef.current.scrollTop = e.currentTarget.scrollTop;
+    }
+  };
 
   const updateEditorHeight = useCallback(() => {
     if (editorRef.current) {
@@ -160,24 +168,40 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
       className={cn(
         "flex flex-col justify-start items-start relative w-full bg-inherit",
         // Focus mode: flex-1 to grow and fill space; Normal: h-auto with max-height
+        // Focus mode: flex-1 to grow and fill space; Normal: h-auto with max-height
         isFocusMode ? "flex-1" : `h-auto ${EDITOR_HEIGHT.normal}`,
         className,
       )}
     >
-      <textarea
-        className={cn(
-          "w-full my-1 text-base resize-none overflow-x-hidden overflow-y-auto bg-transparent outline-none placeholder:opacity-70 whitespace-pre-wrap break-words",
-          // Focus mode: flex-1 h-0 to grow within flex container; Normal: h-full to fill wrapper
-          isFocusMode ? "flex-1 h-0" : "h-full",
+      <div className={cn("w-full flex flex-row h-full overflow-hidden", isFocusMode ? "flex-1" : "")}>
+        {showLineNumbers && (
+          <div
+            ref={lineNumbersRef}
+            className={cn(
+              "shrink-0 w-8 mr-2 text-right text-muted-foreground/50 font-mono text-base overflow-hidden select-none bg-transparent whitespace-pre-wrap break-words py-1",
+            )}
+          >
+            {(editorRef.current?.value || "").split("\n").map((_, i) => (
+              <div key={i}>{i + 1}</div>
+            ))}
+          </div>
         )}
-        rows={1}
-        placeholder={placeholder}
-        ref={editorRef}
-        onPaste={onPaste}
-        onInput={handleEditorInput}
-        onCompositionStart={onCompositionStart}
-        onCompositionEnd={onCompositionEnd}
-      ></textarea>
+        <textarea
+          className={cn(
+            "flex-1 w-full my-1 text-base resize-none overflow-x-hidden overflow-y-auto bg-transparent outline-none placeholder:opacity-70 whitespace-pre-wrap break-words",
+            // Focus mode: flex-1 h-0 to grow within flex container; Normal: h-full to fill wrapper
+            isFocusMode ? "flex-1 h-0" : "h-full",
+          )}
+          rows={1}
+          placeholder={placeholder}
+          ref={editorRef}
+          onPaste={onPaste}
+          onInput={handleEditorInput}
+          onScroll={handleScroll}
+          onCompositionStart={onCompositionStart}
+          onCompositionEnd={onCompositionEnd}
+        ></textarea>
+      </div>
       <TagSuggestions editorRef={editorRef} editorActions={ref} />
       <SlashCommands editorRef={editorRef} editorActions={ref} commands={editorCommands} />
     </div>

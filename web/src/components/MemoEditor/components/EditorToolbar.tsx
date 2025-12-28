@@ -37,6 +37,9 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({ onSave, onCancel, memoNa
       </div>
 
       <div className="flex flex-row justify-end items-center gap-2">
+        <Button variant="ghost" size="icon" onClick={handleToggleFocusMode} title="Focus Mode">
+          <Maximize2Icon className="w-5 h-5 text-muted-foreground" />
+        </Button>
         <VisibilitySelector value={state.metadata.visibility} onChange={handleVisibilityChange} />
 
         {onCancel && (
