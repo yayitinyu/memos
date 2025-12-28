@@ -52,7 +52,12 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
 
   const editorRef = useRef<EditorRefActions>(null);
   const { state, actions, dispatch } = useEditorContext();
-  const [showLineNumbers, setShowLineNumbers] = useState(false);
+  // Line numbers are tracked separately - they persist within focus mode session
+  // but are not shown when focus mode is off
+  const [lineNumbersEnabled, setLineNumbersEnabled] = useState(false);
+  
+  // Line numbers only show when both: focus mode is on AND user has enabled them
+  const showLineNumbers = state.ui.isFocusMode && lineNumbersEnabled;
 
   useMemoInit(editorRef, memoName, cacheKey, currentUser?.name ?? "", autoFocus);
 
@@ -64,6 +69,11 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
 
   const handleToggleFocusMode = () => {
     dispatch(actions.toggleFocusMode());
+  };
+
+  // Toggle line numbers - persists within focus mode session
+  const handleToggleLineNumbers = () => {
+    setLineNumbersEnabled((prev) => !prev);
   };
 
   useEffect(() => {
@@ -150,8 +160,8 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
         {state.ui.isFocusMode && (
           <MarkdownToolbar
             editorRef={editorRef}
-            showLineNumbers={showLineNumbers}
-            toggleShowLineNumbers={() => setShowLineNumbers(!showLineNumbers)}
+            showLineNumbers={lineNumbersEnabled}
+            toggleShowLineNumbers={handleToggleLineNumbers}
           />
         )}
 

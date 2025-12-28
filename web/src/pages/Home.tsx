@@ -23,15 +23,17 @@ const Home = () => {
   });
 
   return (
-    <div className="w-full min-h-full bg-background text-foreground">
-      <PagedMemoList
-        renderer={(memo: Memo, context?: MemoRenderContext) => (
-          <MemoView key={`${memo.name}-${memo.displayTime}`} memo={memo} showVisibility showPinned compact={context?.compact} />
-        )}
-        listSort={listSort}
-        orderBy={orderBy}
-        filter={memoFilter}
-      />
+    <div className="w-full min-h-full bg-background text-foreground flex justify-center">
+      <div className="w-full max-w-6xl px-4">
+        <PagedMemoList
+          renderer={(memo: Memo, context?: MemoRenderContext) => (
+            <MemoView key={`${memo.name}-${memo.displayTime}`} memo={memo} showVisibility showPinned compact={context?.compact} />
+          )}
+          listSort={listSort}
+          orderBy={orderBy}
+          filter={memoFilter}
+        />
+      </div>
     </div>
   );
 };

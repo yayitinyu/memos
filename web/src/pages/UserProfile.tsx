@@ -55,12 +55,12 @@ const UserProfile = () => {
   };
 
   return (
-    <section className="w-full min-h-full flex flex-col justify-start items-center">
+    <section className="w-full min-h-full flex flex-col justify-start items-center px-4">
       {!isLoading &&
         (user ? (
           <>
             {/* User profile header - centered with max width */}
-            <div className="w-full max-w-6xl mx-auto mb-8">
+            <div className="w-full max-w-5xl mx-auto mb-8">
               <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-6 border-b border-border">
                 <div className="flex items-center gap-4">
                   <UserAvatar className="w-20! h-20! drop-shadow rounded-full" avatarUrl={user?.avatarUrl} />
@@ -81,15 +81,17 @@ const UserProfile = () => {
               )}
             </div>
 
-            {/* Memo list - full width for proper masonry layout */}
-            <PagedMemoList
-              renderer={(memo: Memo, context?: MemoRenderContext) => (
-                <MemoView key={`${memo.name}-${memo.displayTime}`} memo={memo} showVisibility showPinned compact={context?.compact} />
-              )}
-              listSort={listSort}
-              orderBy={orderBy}
-              filter={memoFilter}
-            />
+            {/* Memo list - constrained width for proper layout */}
+            <div className="w-full max-w-5xl">
+              <PagedMemoList
+                renderer={(memo: Memo, context?: MemoRenderContext) => (
+                  <MemoView key={`${memo.name}-${memo.displayTime}`} memo={memo} showVisibility showPinned compact={context?.compact} />
+                )}
+                listSort={listSort}
+                orderBy={orderBy}
+                filter={memoFilter}
+              />
+            </div>
           </>
         ) : (
           <div className="w-full max-w-3xl mx-auto">

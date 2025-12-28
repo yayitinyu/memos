@@ -1,5 +1,5 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CompactMonthCalendar,
   calculateYearMaxCount,
@@ -18,12 +18,14 @@ import { useTranslate } from "@/utils/i18n";
 
 const MIN_YEAR = 2000;
 const MAX_YEAR = new Date().getFullYear() + 1;
+const MONTHS_PER_PAGE = 8;
 
 const Calendar = () => {
   const currentUser = useCurrentUser();
   const t = useTranslate();
   const navigateToDateFilter = useDateFilterNavigation();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [currentPage, setCurrentPage] = useState(0);
 
   const { statistics, loading } = useFilteredMemoStats({
     userName: currentUser?.name,
@@ -37,6 +39,15 @@ const Calendar = () => {
 
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const isCurrentYear = selectedYear === currentYear;
+
+  // Pagination calculations
+  const totalPages = Math.ceil(months.length / MONTHS_PER_PAGE);
+  const displayedMonths = months.slice(currentPage * MONTHS_PER_PAGE, (currentPage + 1) * MONTHS_PER_PAGE);
+
+  // Reset page when year changes
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [selectedYear]);
 
   const handlePrevYear = () => {
     if (selectedYear > MIN_YEAR) {
@@ -52,6 +63,14 @@ const Calendar = () => {
 
   const handleToday = () => {
     setSelectedYear(currentYear);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((p) => Math.max(0, p - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((p) => Math.min(totalPages - 1, p + 1));
   };
 
   const canGoPrev = selectedYear > MIN_YEAR;
@@ -116,7 +135,7 @@ const Calendar = () => {
             <TooltipProvider>
               <div className="w-full animate-fade-in">
                 <div className="grid gap-2 sm:gap-2.5 md:gap-3 lg:gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
-                  {months.map((month) => (
+                  {displayedMonths.map((month) => (
                     <div
                       key={month}
                       className="flex flex-col gap-1 sm:gap-1.5 rounded-lg border bg-card p-1.5 sm:p-2 md:p-2.5 shadow-sm hover:shadow-md hover:border-border/60 transition-all duration-200"
@@ -132,6 +151,35 @@ const Calendar = () => {
                     </div>
                   ))}
                 </div>
+
+                {/* Bottom pagination */}
+                {totalPages > 1 && (
+                  <div className="flex justify-end items-center gap-2 mt-4">
+                    <span className="text-sm text-muted-foreground">
+                      {currentPage + 1} / {totalPages}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handlePrevPage}
+                      disabled={currentPage === 0}
+                      aria-label="Previous page"
+                      className="rounded-full hover:bg-accent/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeftIcon />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages - 1}
+                      aria-label="Next page"
+                      className="rounded-full hover:bg-accent/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <ChevronRightIcon />
+                    </Button>
+                  </div>
+                )}
               </div>
             </TooltipProvider>
           )}
@@ -142,3 +190,4 @@ const Calendar = () => {
 };
 
 export default Calendar;
+
