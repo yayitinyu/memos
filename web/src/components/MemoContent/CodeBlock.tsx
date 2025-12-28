@@ -127,7 +127,7 @@ export const CodeBlock = ({ children, className, ...props }: CodeBlockProps) => 
         </button>
       </div>
       <div className="w-full overflow-auto bg-background p-3" {...props}>
-        <code className={`language-${language} bg-transparent p-0 block font-mono text-sm leading-relaxed`} dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+        <code className={`language-${language} whitespace-pre bg-transparent p-0 block font-mono text-sm leading-relaxed`} dangerouslySetInnerHTML={{ __html: highlightedCode }} />
       </div>
     </div>
   );

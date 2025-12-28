@@ -126,7 +126,7 @@ const Calendar = () => {
                         month={month}
                         data={yearData}
                         maxCount={yearMaxCount}
-                        size="small"
+                        size="default"
                         onClick={navigateToDateFilter}
                       />
                     </div>

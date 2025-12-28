@@ -590,7 +590,7 @@ func jsonExtractExpr(d DialectName, field Field) string {
 	case DialectSQLite, DialectMySQL:
 		return fmt.Sprintf("JSON_EXTRACT(%s, '%s')", column, jsonPath(field))
 	case DialectPostgres:
-		return buildPostgresJSONAccessor(column, field.JSONPath, true)
+		return buildPostgresJSONAccessor(fmt.Sprintf("(%s)::jsonb", column), field.JSONPath, true)
 	default:
 		return ""
 	}
@@ -602,7 +602,7 @@ func jsonArrayExpr(d DialectName, field Field) string {
 	case DialectSQLite, DialectMySQL:
 		return fmt.Sprintf("JSON_EXTRACT(%s, '%s')", column, jsonPath(field))
 	case DialectPostgres:
-		return buildPostgresJSONAccessor(column, field.JSONPath, false)
+		return buildPostgresJSONAccessor(fmt.Sprintf("(%s)::jsonb", column), field.JSONPath, false)
 	default:
 		return ""
 	}

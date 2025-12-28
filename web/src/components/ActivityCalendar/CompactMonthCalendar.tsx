@@ -32,7 +32,7 @@ export const CompactMonthCalendar = memo((props: CompactMonthCalendarProps) => {
   return (
     <div className={cn("grid grid-cols-7", sizeConfig.gap)}>
       {weekDays.map((day) => (
-        <div key={day} className={cn("text-center text-muted-foreground opacity-60", sizeConfig.font, "h-auto")}>
+        <div key={day} className={cn("text-center text-muted-foreground opacity-60 flex justify-center items-center", sizeConfig.font, "h-auto py-1")}>
           {day}
         </div>
       ))}

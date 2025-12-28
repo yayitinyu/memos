@@ -60,7 +60,7 @@ const UserProfile = () => {
         (user ? (
           <>
             {/* User profile header - centered with max width */}
-            <div className="w-full max-w-4xl mx-auto mb-8">
+            <div className="w-full max-w-6xl mx-auto mb-8">
               <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-6 border-b border-border">
                 <div className="flex items-center gap-4">
                   <UserAvatar className="w-20! h-20! drop-shadow rounded-full" avatarUrl={user?.avatarUrl} />
