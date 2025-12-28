@@ -25,7 +25,16 @@ const Calendar = () => {
   const t = useTranslate();
   const navigateToDateFilter = useDateFilterNavigation();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [currentPage, setCurrentPage] = useState(0);
+  
+  // Calculate which page contains the current month (0-indexed)
+  const currentMonth = new Date().getMonth(); // 0-11
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
+  const getPageForMonth = (monthIndex: number) => Math.floor(monthIndex / MONTHS_PER_PAGE);
+  
+  const [currentPage, setCurrentPage] = useState(() => {
+    // Initial page: if current year, go to page containing current month
+    return getPageForMonth(currentMonth);
+  });
 
   const { statistics, loading } = useFilteredMemoStats({
     userName: currentUser?.name,
@@ -37,17 +46,20 @@ const Calendar = () => {
 
   const yearMaxCount = useMemo(() => calculateYearMaxCount(yearData), [yearData]);
 
-  const currentYear = useMemo(() => new Date().getFullYear(), []);
   const isCurrentYear = selectedYear === currentYear;
 
   // Pagination calculations
   const totalPages = Math.ceil(months.length / MONTHS_PER_PAGE);
   const displayedMonths = months.slice(currentPage * MONTHS_PER_PAGE, (currentPage + 1) * MONTHS_PER_PAGE);
 
-  // Reset page when year changes
+  // When year changes: if viewing current year, go to page with current month; otherwise go to page 0
   useEffect(() => {
-    setCurrentPage(0);
-  }, [selectedYear]);
+    if (selectedYear === currentYear) {
+      setCurrentPage(getPageForMonth(currentMonth));
+    } else {
+      setCurrentPage(0);
+    }
+  }, [selectedYear, currentYear, currentMonth]);
 
   const handlePrevYear = () => {
     if (selectedYear > MIN_YEAR) {
