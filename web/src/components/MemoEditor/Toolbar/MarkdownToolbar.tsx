@@ -69,7 +69,7 @@ const MarkdownToolbar = ({ editorRef, showLineNumbers, toggleShowLineNumbers }: 
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1 px-4 py-2 border-b border-border bg-muted/20 sticky top-0 z-10">
+    <div className="flex flex-wrap items-center gap-1 px-2 sm:px-4 py-2 border-b border-border bg-background sticky top-0 z-20 overflow-x-auto">
       <TooltipProvider>
         {/* Undo/Redo/Paste group */}
         <div className="flex items-center gap-0.5">

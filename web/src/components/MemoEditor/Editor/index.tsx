@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { EDITOR_HEIGHT } from "../constants";
 import type { EditorProps } from "../types";
@@ -38,6 +38,9 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
   } = props;
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
+  
+  // Track line count for line numbers display
+  const [lineCount, setLineCount] = useState(1);
 
   const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
     if (lineNumbersRef.current) {
@@ -55,8 +58,11 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
 
   const updateContent = useCallback(() => {
     if (editorRef.current) {
-      handleContentChangeCallback(editorRef.current.value);
+      const content = editorRef.current.value;
+      handleContentChangeCallback(content);
       updateEditorHeight();
+      // Update line count for line numbers
+      setLineCount(content.split("\n").length);
     }
   }, [handleContentChangeCallback, updateEditorHeight]);
 
@@ -65,6 +71,8 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
       editorRef.current.value = initialContent;
       handleContentChangeCallback(initialContent);
       updateEditorHeight();
+      // Initialize line count
+      setLineCount(initialContent.split("\n").length);
     }
     // Only run once on mount to set initial content
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -84,6 +92,8 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
     if (editorRef.current && editorRef.current.value !== initialContent) {
       editorRef.current.value = initialContent;
       updateEditorHeight();
+      // Update line count
+      setLineCount(initialContent.split("\n").length);
     }
   }, [initialContent, updateEditorHeight]);
 
@@ -161,8 +171,11 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
 
   const handleEditorInput = useCallback(() => {
     if (editorRef.current) {
-      handleContentChangeCallback(editorRef.current.value);
+      const content = editorRef.current.value;
+      handleContentChangeCallback(content);
       updateEditorHeight();
+      // Update line count on input
+      setLineCount(content.split("\n").length);
     }
   }, [handleContentChangeCallback, updateEditorHeight]);
 
@@ -172,6 +185,12 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
     editorActions,
     isInIME,
   });
+
+  // Generate line numbers array based on lineCount state
+  const lineNumbers = useMemo(() => 
+    Array.from({ length: lineCount }, (_, i) => i + 1),
+    [lineCount]
+  );
 
   return (
     <div
@@ -186,18 +205,16 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
         {showLineNumbers && (
           <div
             ref={lineNumbersRef}
-            className={cn(
-              "shrink-0 w-8 mr-2 text-right text-muted-foreground/50 font-mono text-base overflow-hidden select-none bg-transparent whitespace-pre-wrap break-words py-1",
-            )}
+            className="shrink-0 w-8 mr-2 text-right text-muted-foreground/50 font-mono text-base overflow-hidden select-none bg-transparent py-1"
           >
-            {(editorRef.current?.value || "").split("\n").map((_, i) => (
-              <div key={i}>{i + 1}</div>
+            {lineNumbers.map((num) => (
+              <div key={num} className="leading-[1.5]">{num}</div>
             ))}
           </div>
         )}
         <textarea
           className={cn(
-            "flex-1 w-full my-1 text-base resize-none overflow-x-hidden bg-transparent outline-none placeholder:opacity-70 whitespace-pre-wrap break-words",
+            "flex-1 w-full my-1 text-base resize-none overflow-x-hidden bg-transparent outline-none placeholder:opacity-70 whitespace-pre-wrap break-words leading-[1.5]",
             // Focus mode: flex-1 with overflow-y-auto; Normal: auto height (controlled by JS)
             isFocusMode ? "flex-1 h-0 overflow-y-auto" : "overflow-y-hidden",
           )}
@@ -218,4 +235,5 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
 });
 
 export default Editor;
+
 
