@@ -46,13 +46,12 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
   };
 
   const updateEditorHeight = useCallback(() => {
-    // Only update height dynamically in focus mode
-    // In normal mode, we use fixed max-height with overflow
-    if (editorRef.current && isFocusMode) {
+    if (editorRef.current) {
+      // Always use dynamic height - textarea expands with content
       editorRef.current.style.height = "auto";
       editorRef.current.style.height = `${editorRef.current.scrollHeight ?? 0}px`;
     }
-  }, [isFocusMode]);
+  }, []);
 
   const updateContent = useCallback(() => {
     if (editorRef.current) {
@@ -71,10 +70,13 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Reset height when switching focus mode
   useEffect(() => {
-    if (!isFocusMode) {
+    // Small delay to ensure DOM is ready after mode switch
+    const timer = setTimeout(() => {
       updateEditorHeight();
-    }
+    }, 50);
+    return () => clearTimeout(timer);
   }, [isFocusMode, updateEditorHeight]);
 
   // Update editor when content is externally changed (e.g., reset after save)
@@ -175,13 +177,12 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
     <div
       className={cn(
         "flex flex-col justify-start items-start relative w-full bg-inherit",
-        // Focus mode: flex-1 to grow and fill space; Normal: h-auto with max-height
-        // Focus mode: flex-1 to grow and fill space; Normal: h-auto with max-height
-        isFocusMode ? "flex-1" : `h-auto ${EDITOR_HEIGHT.normal}`,
+        // Focus mode: flex-1 to grow and fill space; Normal: h-auto with max-height and overflow
+        isFocusMode ? "flex-1" : `h-auto ${EDITOR_HEIGHT.normal} overflow-y-auto`,
         className,
       )}
     >
-      <div className={cn("w-full flex flex-row h-full", isFocusMode ? "flex-1 overflow-hidden" : "overflow-y-auto")}>
+      <div className={cn("w-full flex flex-row", isFocusMode ? "flex-1 h-full overflow-hidden" : "")}>
         {showLineNumbers && (
           <div
             ref={lineNumbersRef}
@@ -197,8 +198,8 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
         <textarea
           className={cn(
             "flex-1 w-full my-1 text-base resize-none overflow-x-hidden bg-transparent outline-none placeholder:opacity-70 whitespace-pre-wrap break-words",
-            // Focus mode: flex-1 h-0 with overflow-y-auto; Normal: min-height with overflow visible (parent handles scrolling)
-            isFocusMode ? "flex-1 h-0 overflow-y-auto" : "min-h-[120px] overflow-y-hidden",
+            // Focus mode: flex-1 with overflow-y-auto; Normal: auto height (controlled by JS)
+            isFocusMode ? "flex-1 h-0 overflow-y-auto" : "overflow-y-hidden",
           )}
           rows={1}
           placeholder={placeholder}
@@ -217,3 +218,4 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
 });
 
 export default Editor;
+

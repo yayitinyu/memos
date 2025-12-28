@@ -78,9 +78,16 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
 
   useEffect(() => {
     if (state.ui.isFocusMode) {
+      // Delay focus to ensure DOM is ready after focus mode transition
       setTimeout(() => {
-        editorRef.current?.focus();
-      }, 100);
+        const editor = editorRef.current;
+        if (editor) {
+          editor.focus();
+          // Move cursor to end of content
+          const len = editor.getContent?.()?.length ?? editor.getEditor?.()?.value?.length ?? 0;
+          editor.setCursorPosition?.(len, len);
+        }
+      }, 200);
     }
   }, [state.ui.isFocusMode]);
 
