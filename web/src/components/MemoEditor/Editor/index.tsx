@@ -205,19 +205,21 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
         {showLineNumbers && (
           <div
             ref={lineNumbersRef}
-            className="shrink-0 w-8 mr-2 text-right text-muted-foreground/50 font-mono text-base overflow-hidden select-none bg-transparent py-1"
+            className="shrink-0 w-10 pr-2 pt-0 text-right text-muted-foreground/50 font-mono text-base overflow-hidden select-none bg-transparent"
+            style={{ lineHeight: '24px' }}
           >
             {lineNumbers.map((num) => (
-              <div key={num} className="leading-[1.5]">{num}</div>
+              <div key={num}>{num}</div>
             ))}
           </div>
         )}
         <textarea
           className={cn(
-            "flex-1 w-full my-1 text-base resize-none overflow-x-hidden bg-transparent outline-none placeholder:opacity-70 whitespace-pre-wrap break-words leading-[1.5]",
+            "flex-1 w-full pt-0 text-base resize-none overflow-x-hidden bg-transparent outline-none placeholder:opacity-70 whitespace-pre-wrap break-words",
             // Focus mode: flex-1 with overflow-y-auto; Normal: auto height (controlled by JS)
             isFocusMode ? "flex-1 h-0 overflow-y-auto" : "overflow-y-hidden",
           )}
+          style={{ lineHeight: '24px' }}
           rows={1}
           placeholder={placeholder}
           ref={editorRef}
