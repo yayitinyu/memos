@@ -82,21 +82,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(userKeys.detail(currentUser.name), currentUser);
     } catch (error) {
       console.error("Failed to initialize auth:", error);
-      clearAccessToken();
-      setState({
-        currentUser: undefined,
-        userGeneralSetting: undefined,
-        userWebhooksSetting: undefined,
-        shortcuts: [],
-        isInitialized: true,
-        isLoading: false,
-      });
       
-      // Redirect to login page on auth failure (token expired, etc.)
-      // Import dynamically to avoid circular dependencies
-      import("@/utils/auth-redirect").then(({ redirectOnAuthFailure }) => {
-        redirectOnAuthFailure();
-      });
+      // Check if this is an actual authentication error vs a network error
+      const isAuthError = error instanceof Error && 
+        (error.message.includes("unauthenticated") || 
+         error.message.includes("unauthorized") ||
+         error.message.includes("authentication required"));
+      
+      if (isAuthError) {
+        // Only clear token and redirect for real auth errors
+        clearAccessToken();
+        setState({
+          currentUser: undefined,
+          userGeneralSetting: undefined,
+          userWebhooksSetting: undefined,
+          shortcuts: [],
+          isInitialized: true,
+          isLoading: false,
+        });
+        
+        // Redirect to login page on auth failure (token expired, etc.)
+        import("@/utils/auth-redirect").then(({ redirectOnAuthFailure }) => {
+          redirectOnAuthFailure();
+        });
+      } else {
+        // For network errors, just mark as initialized without user
+        // User can try refreshing or the visibility change handler will retry
+        setState({
+          currentUser: undefined,
+          userGeneralSetting: undefined,
+          userWebhooksSetting: undefined,
+          shortcuts: [],
+          isInitialized: true,
+          isLoading: false,
+        });
+      }
     }
   }, [fetchUserSettings, queryClient]);
 
