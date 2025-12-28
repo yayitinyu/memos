@@ -18,7 +18,7 @@ const VisibilitySelector = (props: VisibilitySelectorProps) => {
   const currentLabel = visibilityOptions.find((option) => option.value === value)?.label || "";
 
   return (
-    <DropdownMenu onOpenChange={props.onOpenChange}>
+    <DropdownMenu onOpenChange={props.onOpenChange} modal={false}>
       <DropdownMenuTrigger asChild>
         <button className="inline-flex items-center px-2 text-sm text-muted-foreground opacity-80 hover:opacity-100 transition-colors">
           <VisibilityIcon visibility={value} className="opacity-60 mr-1.5" />

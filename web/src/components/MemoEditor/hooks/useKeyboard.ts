@@ -12,6 +12,7 @@ export const useKeyboard = (_editorRef: React.RefObject<EditorRefActions | null>
     const handleKeyDown = (event: KeyboardEvent) => {
       // Cmd/Ctrl + Enter to save
       if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        if (event.repeat) return;
         event.preventDefault();
         options.onSave();
         return;

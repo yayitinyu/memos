@@ -44,10 +44,14 @@ export const useMemoActionHandlers = ({ memo, onEdit, setDeleteDialogOpen, setRe
         },
         updateMask: ["pinned"],
       });
-    } catch {
-      // do nothing
+    } catch (error) {
+      // Show error toast if pinning fails
+      handleError(error, toast.error, {
+        context: memo.pinned ? t("common.unpin") : t("common.pin"),
+        fallbackMessage: "Failed to update pin status",
+      });
     }
-  }, [memo.name, memo.pinned, updateMemo]);
+  }, [memo.name, memo.pinned, updateMemo, t]);
 
   const handleEditMemoClick = useCallback(() => {
     onEdit?.();

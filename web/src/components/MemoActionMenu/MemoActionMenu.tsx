@@ -61,7 +61,7 @@ const MemoActionMenu = (props: MemoActionMenuProps) => {
   });
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="size-4">
           <MoreVerticalIcon className="text-muted-foreground" />
