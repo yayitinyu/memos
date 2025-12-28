@@ -18,6 +18,7 @@ export interface MemoEditorProps {
 export interface EditorContentProps {
   placeholder?: string;
   autoFocus?: boolean;
+  showLineNumbers?: boolean;
 }
 
 export interface EditorToolbarProps {

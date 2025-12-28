@@ -5,7 +5,7 @@ import { useBlobUrls, useDragAndDrop } from "../hooks";
 import { useEditorContext } from "../state";
 import type { EditorContentProps } from "../types";
 
-export const EditorContent = forwardRef<EditorRefActions, EditorContentProps>(({ placeholder }, ref) => {
+export const EditorContent = forwardRef<EditorRefActions, EditorContentProps>(({ placeholder, showLineNumbers }, ref) => {
   const { state, actions, dispatch } = useEditorContext();
   const { createBlobUrl } = useBlobUrls();
 
@@ -41,7 +41,7 @@ export const EditorContent = forwardRef<EditorRefActions, EditorContentProps>(({
         initialContent={state.content}
         placeholder={placeholder || ""}
         isFocusMode={state.ui.isFocusMode}
-        showLineNumbers={props.showLineNumbers}
+        showLineNumbers={showLineNumbers}
         isInIME={state.ui.isComposing}
         onContentChange={handleContentChange}
         onPaste={handlePaste}
