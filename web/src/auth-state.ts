@@ -1,18 +1,17 @@
-// Access token storage using sessionStorage for persistence across page refreshes
-// sessionStorage is cleared when the tab/window is closed, providing reasonable security
-// while avoiding unnecessary token refreshes on page reload
+// Access token storage using localStorage for persistence across browser sessions
+// localStorage persists until explicitly cleared, keeping users logged in
 let accessToken: string | null = null;
 let tokenExpiresAt: Date | null = null;
 
-const SESSION_TOKEN_KEY = "memos_access_token";
-const SESSION_EXPIRES_KEY = "memos_token_expires_at";
+const TOKEN_KEY = "memos_access_token";
+const EXPIRES_KEY = "memos_token_expires_at";
 
 export const getAccessToken = (): string | null => {
-  // If not in memory, try to restore from sessionStorage
+  // If not in memory, try to restore from localStorage
   if (!accessToken) {
     try {
-      const storedToken = sessionStorage.getItem(SESSION_TOKEN_KEY);
-      const storedExpires = sessionStorage.getItem(SESSION_EXPIRES_KEY);
+      const storedToken = localStorage.getItem(TOKEN_KEY);
+      const storedExpires = localStorage.getItem(EXPIRES_KEY);
 
       if (storedToken && storedExpires) {
         const expiresAt = new Date(storedExpires);
@@ -21,14 +20,14 @@ export const getAccessToken = (): string | null => {
           accessToken = storedToken;
           tokenExpiresAt = expiresAt;
         } else {
-          // Token expired, clean up sessionStorage
-          sessionStorage.removeItem(SESSION_TOKEN_KEY);
-          sessionStorage.removeItem(SESSION_EXPIRES_KEY);
+          // Token expired, clean up localStorage
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(EXPIRES_KEY);
         }
       }
     } catch (e) {
-      // sessionStorage might not be available (e.g., in some privacy modes)
-      console.warn("Failed to access sessionStorage:", e);
+      // localStorage might not be available (e.g., in some privacy modes)
+      console.warn("Failed to access localStorage:", e);
     }
   }
   return accessToken;
@@ -40,17 +39,17 @@ export const setAccessToken = (token: string | null, expiresAt?: Date): void => 
 
   try {
     if (token && expiresAt) {
-      // Store in sessionStorage for persistence across page refreshes
-      sessionStorage.setItem(SESSION_TOKEN_KEY, token);
-      sessionStorage.setItem(SESSION_EXPIRES_KEY, expiresAt.toISOString());
+      // Store in localStorage for persistence across browser sessions
+      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(EXPIRES_KEY, expiresAt.toISOString());
     } else {
-      // Clear sessionStorage if token is being cleared
-      sessionStorage.removeItem(SESSION_TOKEN_KEY);
-      sessionStorage.removeItem(SESSION_EXPIRES_KEY);
+      // Clear localStorage if token is being cleared
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(EXPIRES_KEY);
     }
   } catch (e) {
-    // sessionStorage might not be available (e.g., in some privacy modes)
-    console.warn("Failed to write to sessionStorage:", e);
+    // localStorage might not be available (e.g., in some privacy modes)
+    console.warn("Failed to write to localStorage:", e);
   }
 };
 
@@ -65,9 +64,10 @@ export const clearAccessToken = (): void => {
   tokenExpiresAt = null;
 
   try {
-    sessionStorage.removeItem(SESSION_TOKEN_KEY);
-    sessionStorage.removeItem(SESSION_EXPIRES_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(EXPIRES_KEY);
   } catch (e) {
-    console.warn("Failed to clear sessionStorage:", e);
+    console.warn("Failed to clear localStorage:", e);
   }
 };
+
