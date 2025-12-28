@@ -46,11 +46,13 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
   };
 
   const updateEditorHeight = useCallback(() => {
-    if (editorRef.current) {
+    // Only update height dynamically in focus mode
+    // In normal mode, we use fixed max-height with overflow
+    if (editorRef.current && isFocusMode) {
       editorRef.current.style.height = "auto";
       editorRef.current.style.height = `${editorRef.current.scrollHeight ?? 0}px`;
     }
-  }, []);
+  }, [isFocusMode]);
 
   const updateContent = useCallback(() => {
     if (editorRef.current) {
@@ -179,7 +181,7 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
         className,
       )}
     >
-      <div className={cn("w-full flex flex-row h-full overflow-hidden", isFocusMode ? "flex-1" : "")}>
+      <div className={cn("w-full flex flex-row h-full", isFocusMode ? "flex-1 overflow-hidden" : "overflow-y-auto")}>
         {showLineNumbers && (
           <div
             ref={lineNumbersRef}
@@ -194,9 +196,9 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
         )}
         <textarea
           className={cn(
-            "flex-1 w-full my-1 text-base resize-none overflow-x-hidden overflow-y-auto bg-transparent outline-none placeholder:opacity-70 whitespace-pre-wrap break-words",
-            // Focus mode: flex-1 h-0 to grow within flex container; Normal: h-full to fill wrapper
-            isFocusMode ? "flex-1 h-0" : "h-full",
+            "flex-1 w-full my-1 text-base resize-none overflow-x-hidden bg-transparent outline-none placeholder:opacity-70 whitespace-pre-wrap break-words",
+            // Focus mode: flex-1 h-0 with overflow-y-auto; Normal: min-height with overflow visible (parent handles scrolling)
+            isFocusMode ? "flex-1 h-0 overflow-y-auto" : "min-h-[120px] overflow-y-hidden",
           )}
           rows={1}
           placeholder={placeholder}
