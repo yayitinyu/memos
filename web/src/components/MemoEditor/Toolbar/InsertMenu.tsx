@@ -1,6 +1,6 @@
 import { LatLng } from "leaflet";
 import { uniqBy } from "lodash-es";
-import { FileIcon, LinkIcon, LoaderIcon, MapPinIcon, Maximize2Icon, MoreHorizontalIcon, PlusIcon } from "lucide-react";
+import { FileIcon, LinkIcon, LoaderIcon, MapPinIcon, Maximize2Icon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import type { LocalFile } from "@/components/memo-metadata";
 import { Button } from "@/components/ui/button";
@@ -8,11 +8,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-  useDropdownMenuSubHoverDelay,
 } from "@/components/ui/dropdown-menu";
 import type { MemoRelation } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
@@ -28,15 +24,10 @@ const InsertMenu = (props: InsertMenuProps) => {
 
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
-  const [moreSubmenuOpen, setMoreSubmenuOpen] = useState(false);
 
   // Abort controller for canceling geocoding requests
   const { abort: abortGeocoding, abortAndCreate: createGeocodingSignal } = useAbortController();
 
-  const { handleTriggerEnter, handleTriggerLeave, handleContentEnter, handleContentLeave } = useDropdownMenuSubHoverDelay(
-    150,
-    setMoreSubmenuOpen,
-  );
 
   const { fileInputRef, selectingFlag, handleFileInputChange, handleUploadClick } = useFileUpload((newFiles: LocalFile[]) => {
     newFiles.forEach((file) => dispatch(actions.addLocalFile(file)));
@@ -154,25 +145,11 @@ const InsertMenu = (props: InsertMenuProps) => {
             <MapPinIcon className="w-4 h-4" />
             {t("tooltip.select-location")}
           </DropdownMenuItem>
-          {/* View submenu with Focus Mode */}
-          <DropdownMenuSub open={moreSubmenuOpen} onOpenChange={setMoreSubmenuOpen}>
-            <DropdownMenuSubTrigger onPointerEnter={handleTriggerEnter} onPointerLeave={handleTriggerLeave}>
-              <MoreHorizontalIcon className="w-4 h-4" />
-              {t("common.more")}
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent onPointerEnter={handleContentEnter} onPointerLeave={handleContentLeave}>
-              <DropdownMenuItem
-                onClick={() => {
-                  props.onToggleFocusMode?.();
-                  setMoreSubmenuOpen(false);
-                }}
-              >
-                <Maximize2Icon className="w-4 h-4" />
-                {t("editor.focus-mode")}
-                <span className="ml-auto text-xs text-muted-foreground opacity-60">⌘⇧F</span>
-              </DropdownMenuItem>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
+          <DropdownMenuItem onClick={() => props.onToggleFocusMode?.()}>
+            <Maximize2Icon className="w-4 h-4" />
+            {t("editor.focus-mode")}
+            <span className="ml-auto text-xs text-muted-foreground opacity-60">⌘⇧F</span>
+          </DropdownMenuItem>
           <div className="px-2 py-1 text-xs text-muted-foreground opacity-80">{t("editor.slash-commands")}</div>
         </DropdownMenuContent>
       </DropdownMenu>
