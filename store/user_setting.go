@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"log/slog"
 	"time"
 
 	"github.com/pkg/errors"
@@ -154,7 +153,6 @@ func (s *Store) AddUserRefreshToken(ctx context.Context, userID int32, token *st
 			validTokens = append(validTokens, t)
 		}
 	}
-	slog.Info("pruning refresh tokens", "original", len(tokens), "valid", len(validTokens))
 	tokens = validTokens
 
 	tokens = append(tokens, token)

@@ -234,7 +234,11 @@ func (d *DB) UpdateMemo(ctx context.Context, update *store.UpdateMemo) error {
 		set, args = append(set, "visibility = "+placeholder(len(args)+1)), append(args, *v)
 	}
 	if v := update.Pinned; v != nil {
-		set, args = append(set, "pinned = "+placeholder(len(args)+1)), append(args, *v)
+		pinned := 0
+		if *v {
+			pinned = 1
+		}
+		set, args = append(set, "pinned = "+placeholder(len(args)+1)), append(args, pinned)
 	}
 	if v := update.Payload; v != nil {
 		payloadBytes, err := protojson.Marshal(v)
