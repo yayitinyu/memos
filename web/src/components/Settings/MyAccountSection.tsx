@@ -61,9 +61,9 @@ const MyAccountSection = () => {
         <AccessTokenSection />
       </SettingGroup>
 
-      <SettingGroup showSeparator>
+      {/* <SettingGroup showSeparator>
         <SignInSessionSection />
-      </SettingGroup>
+      </SettingGroup> */}
 
       {/* Update Account Dialog */}
       <UpdateAccountDialog open={accountDialog.isOpen} onOpenChange={accountDialog.setOpen} />

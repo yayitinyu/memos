@@ -415,6 +415,7 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 	}
 
 	if err = s.Store.UpdateMemo(ctx, update); err != nil {
+		slog.Error("failed to update memo", slog.Any("err", err))
 		return nil, status.Errorf(codes.Internal, "failed to update memo")
 	}
 
