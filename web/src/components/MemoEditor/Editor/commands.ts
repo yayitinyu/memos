@@ -21,6 +21,16 @@ export const editorCommands: Command[] = [
     cursorOffset: 1,
   },
   {
+    name: "math",
+    run: () => "$x$",
+    cursorOffset: 1,
+  },
+  {
+    name: "math-block",
+    run: () => "$$\n\n$$",
+    cursorOffset: 3,
+  },
+  {
     name: "table",
     run: () => "| Header | Header |\n| ------ | ------ |\n| Cell   | Cell |",
     cursorOffset: 1,

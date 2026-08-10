@@ -164,3 +164,24 @@ func TestSetMemoAttachments(t *testing.T) {
 		require.Contains(t, err.Error(), "not found")
 	})
 }
+
+func TestCreateAttachmentRejectsInvalidID(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	t.Cleanup(ts.Cleanup)
+
+	user, err := ts.CreateRegularUser(ctx, "attachment-user")
+	require.NoError(t, err)
+	userCtx := ts.CreateUserContext(ctx, user.ID)
+
+	_, err = ts.Service.CreateAttachment(userCtx, &apiv1.CreateAttachmentRequest{
+		AttachmentId: "../../outside",
+		Attachment: &apiv1.Attachment{
+			Filename: "test.txt",
+			Type:     "text/plain",
+			Content:  []byte("hello"),
+		},
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid attachment ID")
+}

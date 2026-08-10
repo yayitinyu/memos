@@ -10,6 +10,9 @@ import (
 func TestGetCurrentSchemaVersion(t *testing.T) {
 	ctx := context.Background()
 	ts := NewTestingStore(ctx, t)
+	t.Cleanup(func() {
+		require.NoError(t, ts.Close())
+	})
 
 	currentSchemaVersion, err := ts.GetCurrentSchemaVersion()
 	require.NoError(t, err)

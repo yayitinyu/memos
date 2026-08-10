@@ -1,7 +1,7 @@
 import { timestampDate } from "@bufbuild/protobuf/wkt";
 import { Code, ConnectError, createClient, type Interceptor } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
-import { getAccessToken, setAccessToken } from "./auth-state";
+import { clearAccessToken, getAccessToken, isTokenExpired, setAccessToken } from "./auth-state";
 import { ActivityService } from "./types/proto/api/v1/activity_service_pb";
 import { AttachmentService } from "./types/proto/api/v1/attachment_service_pb";
 import { AuthService } from "./types/proto/api/v1/auth_service_pb";
@@ -67,7 +67,7 @@ const refreshTransport = createConnectTransport({
 
 const refreshAuthClient = createClient(AuthService, refreshTransport);
 
-async function refreshAccessToken(): Promise<void> {
+async function requestAccessTokenRefresh(): Promise<void> {
   const response = await refreshAuthClient.refreshToken({});
 
   if (!response.accessToken) {
@@ -78,12 +78,33 @@ async function refreshAccessToken(): Promise<void> {
   setAccessToken(response.accessToken, expiresAt);
 }
 
+export const refreshAccessToken = (): Promise<void> => tokenRefreshManager.refresh(requestAccessTokenRefresh);
+
+export const isDefinitiveAuthFailure = (error: unknown): boolean =>
+  error instanceof ConnectError && (error.code === Code.Unauthenticated || error.code === Code.PermissionDenied);
+
+const handleDefinitiveAuthFailure = (error: unknown): void => {
+  if (!isDefinitiveAuthFailure(error)) return;
+  clearAccessToken();
+  redirectOnAuthFailure();
+};
+
 // ============================================================================
 // Authentication Interceptor
 // ============================================================================
 
 const authInterceptor: Interceptor = (next) => async (req) => {
-  const token = getAccessToken();
+  let token = getAccessToken();
+  if (token && isTokenExpired()) {
+    try {
+      await refreshAccessToken();
+      token = getAccessToken();
+    } catch (error) {
+      handleDefinitiveAuthFailure(error);
+      throw error;
+    }
+  }
+
   if (token) {
     req.header.set("Authorization", `Bearer ${token}`);
   }
@@ -100,11 +121,12 @@ const authInterceptor: Interceptor = (next) => async (req) => {
     }
 
     if (req.header.get(RETRY_HEADER) === RETRY_HEADER_VALUE) {
+      handleDefinitiveAuthFailure(error);
       throw error;
     }
 
     try {
-      await tokenRefreshManager.refresh(refreshAccessToken);
+      await refreshAccessToken();
 
       const newToken = getAccessToken();
       if (!newToken) {
@@ -115,7 +137,7 @@ const authInterceptor: Interceptor = (next) => async (req) => {
       req.header.set(RETRY_HEADER, RETRY_HEADER_VALUE);
       return await next(req);
     } catch (refreshError) {
-      redirectOnAuthFailure();
+      handleDefinitiveAuthFailure(refreshError);
       throw refreshError;
     }
   }

@@ -14,6 +14,8 @@ import (
 	"github.com/usememos/memos/store"
 )
 
+const patLastUsedUpdateTimeout = 5 * time.Second
+
 // Authenticator provides shared authentication and authorization logic.
 // Used by gRPC interceptor, Connect interceptor, and file server to ensure
 // consistent authentication behavior across all API endpoints.
@@ -151,12 +153,16 @@ func (a *Authenticator) Authenticate(ctx context.Context, authHeader string) *Au
 	if token != "" && strings.HasPrefix(token, PersonalAccessTokenPrefix) {
 		user, pat, err := a.AuthenticateByPAT(ctx, token)
 		if err == nil && user != nil {
-			// Update last used (fire-and-forget with logging)
-			go func() {
-				if err := a.store.UpdatePATLastUsed(context.Background(), user.ID, pat.TokenId, timestamppb.Now()); err != nil {
-					slog.Warn("failed to update PAT last used time", "error", err, "userID", user.ID)
+			// The audit update should outlive a canceled request, but it must not
+			// leave unbounded goroutines behind when the database is unavailable.
+			baseContext := context.WithoutCancel(ctx)
+			go func(userID int32, tokenID string) {
+				updateContext, cancel := context.WithTimeout(baseContext, patLastUsedUpdateTimeout)
+				defer cancel()
+				if err := a.store.UpdatePATLastUsed(updateContext, userID, tokenID, timestamppb.Now()); err != nil {
+					slog.Warn("failed to update PAT last used time", "error", err, "userID", userID)
 				}
-			}()
+			}(user.ID, pat.TokenId)
 			return &AuthResult{User: user, AccessToken: token}
 		}
 	}

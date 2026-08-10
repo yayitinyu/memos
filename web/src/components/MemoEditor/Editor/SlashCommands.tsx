@@ -11,9 +11,10 @@ const SlashCommands = ({ editorRef, editorActions, commands }: SlashCommandsProp
     filterItems: (items, query) => (!query ? items : items.filter((cmd) => cmd.name.toLowerCase().startsWith(query))),
     onAutocomplete: (cmd, word, index, actions) => {
       actions.removeText(index, word.length);
+      const insertionStart = actions.getCursorPosition();
       actions.insertText(cmd.run());
-      if (cmd.cursorOffset) {
-        actions.setCursorPosition(actions.getCursorPosition() + cmd.cursorOffset);
+      if (cmd.cursorOffset !== undefined) {
+        actions.setCursorPosition(insertionStart + cmd.cursorOffset);
       }
     },
   });

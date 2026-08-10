@@ -19,6 +19,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/usememos/memos/internal/base"
 	"github.com/usememos/memos/internal/profile"
 	"github.com/usememos/memos/internal/util"
 	"github.com/usememos/memos/plugin/storage/s3"
@@ -69,9 +70,11 @@ func (s *APIV1Service) CreateAttachment(ctx context.Context, request *v1pb.Creat
 	}
 
 	// Use provided attachment_id or generate a new one
-	attachmentUID := request.AttachmentId
+	attachmentUID := strings.TrimSpace(request.AttachmentId)
 	if attachmentUID == "" {
 		attachmentUID = shortuuid.New()
+	} else if !base.UIDMatcher.MatchString(attachmentUID) {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid attachment ID")
 	}
 
 	create := &store.Attachment{
@@ -287,7 +290,7 @@ func SaveAttachmentBlob(ctx context.Context, profile *profile.Profile, stores *s
 	}
 
 	if instanceStorageSetting.StorageType == storepb.InstanceStorageSetting_LOCAL {
-		filepathTemplate := "assets/{timestamp}_{filename}"
+		filepathTemplate := "assets/{timestamp}_{uuid}_{filename}"
 		if instanceStorageSetting.FilepathTemplate != "" {
 			filepathTemplate = instanceStorageSetting.FilepathTemplate
 		}
@@ -300,23 +303,26 @@ func SaveAttachmentBlob(ctx context.Context, profile *profile.Profile, stores *s
 		internalPath = filepath.ToSlash(internalPath)
 
 		// Ensure the directory exists.
-		osPath := filepath.FromSlash(internalPath)
-		if !filepath.IsAbs(osPath) {
-			osPath = filepath.Join(profile.Data, osPath)
+		osPath, internalPath, err := resolveLocalAttachmentPath(profile.Data, internalPath, create.UID)
+		if err != nil {
+			return err
 		}
 		dir := filepath.Dir(osPath)
-		if err = os.MkdirAll(dir, os.ModePerm); err != nil {
+		if err = os.MkdirAll(dir, 0750); err != nil {
 			return errors.Wrap(err, "Failed to create directory")
 		}
-		dst, err := os.Create(osPath)
+		dst, err := os.OpenFile(osPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 		if err != nil {
 			return errors.Wrap(err, "Failed to create file")
 		}
-		defer dst.Close()
-
-		// Write the blob to the file.
-		if err := os.WriteFile(osPath, create.Blob, 0644); err != nil {
+		if _, err := io.Copy(dst, bytes.NewReader(create.Blob)); err != nil {
+			dst.Close()
+			_ = os.Remove(osPath)
 			return errors.Wrap(err, "Failed to write file")
+		}
+		if err := dst.Close(); err != nil {
+			_ = os.Remove(osPath)
+			return errors.Wrap(err, "Failed to close file")
 		}
 		create.Reference = internalPath
 		create.Blob = nil
@@ -444,6 +450,33 @@ func replaceFilenameWithPathTemplate(path, filename string) string {
 		}
 	})
 	return path
+}
+
+func resolveLocalAttachmentPath(dataDir, internalPath, uid string) (string, string, error) {
+	osPath := filepath.FromSlash(internalPath)
+	if filepath.IsAbs(osPath) {
+		uniquePath := ensureUniqueLocalAttachmentPath(osPath, uid)
+		return uniquePath, filepath.ToSlash(uniquePath), nil
+	}
+	if !filepath.IsLocal(osPath) {
+		return "", "", errors.New("local attachment path escapes the data directory")
+	}
+
+	uniquePath := ensureUniqueLocalAttachmentPath(filepath.Join(dataDir, osPath), uid)
+	reference, err := filepath.Rel(dataDir, uniquePath)
+	if err != nil || !filepath.IsLocal(reference) {
+		return "", "", errors.New("failed to resolve local attachment path")
+	}
+	return uniquePath, filepath.ToSlash(reference), nil
+}
+
+func ensureUniqueLocalAttachmentPath(path, uid string) string {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return path
+	}
+	ext := filepath.Ext(path)
+	base := strings.TrimSuffix(path, ext)
+	return base + "_" + uid + ext
 }
 
 func validateFilename(filename string) bool {

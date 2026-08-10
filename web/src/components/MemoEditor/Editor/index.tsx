@@ -4,6 +4,7 @@ import { EDITOR_HEIGHT } from "../constants";
 import type { EditorProps } from "../types";
 import { editorCommands } from "./commands";
 import SlashCommands from "./SlashCommands";
+import { normalizeSelectionRange } from "./selection";
 import TagSuggestions from "./TagSuggestions";
 import { useListCompletion } from "./useListCompletion";
 
@@ -38,7 +39,7 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
   } = props;
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
-  
+
   // Track line count for line numbers display
   const [lineCount, setLineCount] = useState(1);
 
@@ -50,11 +51,16 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
 
   const updateEditorHeight = useCallback(() => {
     if (editorRef.current) {
-      // Always use dynamic height - textarea expands with content
+      if (isFocusMode) {
+        // Let flexbox own the focused editor height; an inline pixel height
+        // fights the h-0/flex-1 layout and can collapse or overflow it.
+        editorRef.current.style.removeProperty("height");
+        return;
+      }
       editorRef.current.style.height = "auto";
       editorRef.current.style.height = `${editorRef.current.scrollHeight ?? 0}px`;
     }
-  }, []);
+  }, [isFocusMode]);
 
   const updateContent = useCallback(() => {
     if (editorRef.current) {
@@ -144,8 +150,10 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
         return editor.value.slice(editor.selectionStart, editor.selectionEnd);
       },
       setCursorPosition: (startPos: number, endPos?: number) => {
-        const endPosition = Number.isNaN(endPos) ? startPos : (endPos as number);
-        editorRef.current?.setSelectionRange(startPos, endPosition);
+        const editor = editorRef.current;
+        if (!editor) return;
+        const [start, end] = normalizeSelectionRange(startPos, endPos, editor.value.length);
+        editor.setSelectionRange(start, end);
       },
       getCursorLineNumber: () => {
         const editor = editorRef.current;
@@ -187,26 +195,23 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
   });
 
   // Generate line numbers array based on lineCount state
-  const lineNumbers = useMemo(() => 
-    Array.from({ length: lineCount }, (_, i) => i + 1),
-    [lineCount]
-  );
+  const lineNumbers = useMemo(() => Array.from({ length: lineCount }, (_, i) => i + 1), [lineCount]);
 
   return (
     <div
       className={cn(
         "flex flex-col justify-start items-start relative w-full bg-inherit",
         // Focus mode: flex-1 to grow and fill space; Normal: h-auto with max-height and overflow
-        isFocusMode ? "flex-1" : `h-auto ${EDITOR_HEIGHT.normal} overflow-y-auto`,
+        isFocusMode ? "flex-1 min-h-0" : `h-auto ${EDITOR_HEIGHT.normal} overflow-y-auto`,
         className,
       )}
     >
-      <div className={cn("w-full flex flex-row", isFocusMode ? "flex-1 h-full overflow-hidden" : "")}>
+      <div className={cn("w-full flex flex-row", isFocusMode ? "flex-1 min-h-0 overflow-hidden" : "")}>
         {showLineNumbers && (
           <div
             ref={lineNumbersRef}
             className="shrink-0 w-10 pr-2 pt-0 text-right text-muted-foreground/50 font-mono text-base overflow-hidden select-none bg-transparent"
-            style={{ lineHeight: '24px' }}
+            style={{ lineHeight: "24px" }}
           >
             {lineNumbers.map((num) => (
               <div key={num}>{num}</div>
@@ -216,10 +221,11 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
         <textarea
           className={cn(
             "flex-1 w-full pt-0 text-base resize-none overflow-x-hidden bg-transparent outline-none placeholder:opacity-70 whitespace-pre-wrap break-words",
-            // Focus mode: flex-1 with overflow-y-auto; Normal: auto height (controlled by JS)
-            isFocusMode ? "flex-1 h-0 overflow-y-auto" : "overflow-y-hidden",
+            // In a row flex container, h-0 collapses the cross axis. Keep height
+            // automatic so the default stretch behavior fills the focused editor.
+            isFocusMode ? "flex-1 min-h-0 overflow-y-auto" : "overflow-y-hidden",
           )}
-          style={{ lineHeight: '24px' }}
+          style={{ lineHeight: "24px" }}
           rows={1}
           placeholder={placeholder}
           ref={editorRef}
@@ -237,5 +243,3 @@ const Editor = forwardRef(function Editor(props: EditorProps, ref: React.Forward
 });
 
 export default Editor;
-
-

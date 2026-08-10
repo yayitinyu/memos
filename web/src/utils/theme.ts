@@ -2,6 +2,7 @@ import defaultDarkThemeContent from "../themes/default-dark.css?raw";
 import midnightThemeContent from "../themes/midnight.css?raw";
 import paperThemeContent from "../themes/paper.css?raw";
 import whitewallThemeContent from "../themes/whitewall.css?raw";
+import type { Translations } from "./i18n";
 
 // ============================================================================
 // Types and Constants
@@ -13,8 +14,8 @@ export type Theme = (typeof VALID_THEMES)[number];
 export type ResolvedTheme = Exclude<Theme, "system">;
 
 export interface ThemeOption {
-  value: string;
-  label: string;
+  value: Theme;
+  labelKey: Translations;
 }
 
 const STORAGE_KEY = "memos-theme";
@@ -29,12 +30,12 @@ const THEME_CONTENT: Record<ResolvedTheme, string | null> = {
 };
 
 export const THEME_OPTIONS: ThemeOption[] = [
-  { value: "system", label: "Sync with system" },
-  { value: "default", label: "Light" },
-  { value: "default-dark", label: "Dark" },
-  { value: "midnight", label: "Midnight" },
-  { value: "paper", label: "Paper" },
-  { value: "whitewall", label: "Whitewall" },
+  { value: "system", labelKey: "setting.preference-section.theme-options.system" },
+  { value: "default", labelKey: "setting.preference-section.theme-options.light" },
+  { value: "default-dark", labelKey: "setting.preference-section.theme-options.dark" },
+  { value: "midnight", labelKey: "setting.preference-section.theme-options.midnight" },
+  { value: "paper", labelKey: "setting.preference-section.theme-options.paper" },
+  { value: "whitewall", labelKey: "setting.preference-section.theme-options.whitewall" },
 ];
 
 // ============================================================================

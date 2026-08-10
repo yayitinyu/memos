@@ -118,7 +118,7 @@ func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Ech
 		return err
 	}
 	gwGroup := echoServer.Group("")
-	gwGroup.Use(middleware.CORS())
+	gwGroup.Use(middleware.CORSWithConfig(newCORSConfig(s.Profile)))
 	handler := echo.WrapHandler(gwMux)
 
 	gwGroup.Any("/api/v1/*", handler)
@@ -136,15 +136,9 @@ func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Ech
 	connectHandler := NewConnectServiceHandler(s)
 	connectHandler.RegisterConnectHandlers(connectMux, connectInterceptors)
 
-	// Wrap with CORS for browser access
-	corsHandler := middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOriginFunc: func(_ string) (bool, error) {
-			return true, nil
-		},
-		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodOptions},
-		AllowHeaders:     []string{"*"},
-		AllowCredentials: true,
-	})
+	// Credentialed cross-origin requests are restricted to the configured
+	// instance origin. Same-origin deployments do not require CORS headers.
+	corsHandler := middleware.CORSWithConfig(newCORSConfig(s.Profile))
 	connectGroup := echoServer.Group("", corsHandler)
 	connectGroup.Any("/memos.api.v1.*", echo.WrapHandler(connectMux))
 

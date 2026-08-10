@@ -22,18 +22,30 @@ func (s *APIV1Service) convertMemoFromStore(ctx context.Context, memo *store.Mem
 	if instanceMemoRelatedSetting.DisplayWithUpdateTime {
 		displayTs = memo.UpdatedTs
 	}
+	if displayTs <= 0 {
+		displayTs = memo.CreatedTs
+	}
+	if displayTs <= 0 {
+		displayTs = memo.UpdatedTs
+	}
 
 	name := fmt.Sprintf("%s%s", MemoNamePrefix, memo.UID)
 	memoMessage := &v1pb.Memo{
-		Name:        name,
-		State:       convertStateFromStore(memo.RowStatus),
-		Creator:     fmt.Sprintf("%s%d", UserNamePrefix, memo.CreatorID),
-		CreateTime:  timestamppb.New(time.Unix(memo.CreatedTs, 0)),
-		UpdateTime:  timestamppb.New(time.Unix(memo.UpdatedTs, 0)),
-		DisplayTime: timestamppb.New(time.Unix(displayTs, 0)),
-		Content:     memo.Content,
-		Visibility:  convertVisibilityFromStore(memo.Visibility),
-		Pinned:      memo.Pinned,
+		Name:       name,
+		State:      convertStateFromStore(memo.RowStatus),
+		Creator:    fmt.Sprintf("%s%d", UserNamePrefix, memo.CreatorID),
+		Content:    memo.Content,
+		Visibility: convertVisibilityFromStore(memo.Visibility),
+		Pinned:     memo.Pinned,
+	}
+	if memo.CreatedTs > 0 {
+		memoMessage.CreateTime = timestamppb.New(time.Unix(memo.CreatedTs, 0))
+	}
+	if memo.UpdatedTs > 0 {
+		memoMessage.UpdateTime = timestamppb.New(time.Unix(memo.UpdatedTs, 0))
+	}
+	if displayTs > 0 {
+		memoMessage.DisplayTime = timestamppb.New(time.Unix(displayTs, 0))
 	}
 	if memo.Payload != nil {
 		memoMessage.Tags = memo.Payload.Tags

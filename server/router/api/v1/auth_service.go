@@ -344,24 +344,45 @@ func (*APIV1Service) buildRefreshTokenCookie(ctx context.Context, refreshToken s
 		attrs = append(attrs, "Expires="+expireTime.UTC().Format("Mon, 02 Jan 2006 15:04:05 GMT"))
 	}
 
-	// Try to determine if the request is HTTPS by checking the origin header
-	// Default to non-HTTPS (Lax SameSite) if metadata is not available
-	isHTTPS := false
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		for _, v := range md.Get("origin") {
-			if strings.HasPrefix(v, "https://") {
-				isHTTPS = true
-				break
-			}
-		}
-	}
-
-	if isHTTPS {
+	if isSecureRequest(ctx) {
 		attrs = append(attrs, "SameSite=Lax", "Secure")
 	} else {
 		attrs = append(attrs, "SameSite=Lax")
 	}
 	return strings.Join(attrs, "; ")
+}
+
+func isSecureRequest(ctx context.Context) bool {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return false
+	}
+
+	for _, value := range md.Get("x-forwarded-proto") {
+		for proto := range strings.SplitSeq(value, ",") {
+			if strings.EqualFold(strings.TrimSpace(proto), "https") {
+				return true
+			}
+		}
+	}
+
+	for _, value := range md.Get("forwarded") {
+		for entry := range strings.SplitSeq(value, ",") {
+			for part := range strings.SplitSeq(entry, ";") {
+				key, proto, found := strings.Cut(strings.TrimSpace(part), "=")
+				if found && strings.EqualFold(key, "proto") && strings.EqualFold(strings.Trim(strings.TrimSpace(proto), "\""), "https") {
+					return true
+				}
+			}
+		}
+	}
+
+	for _, value := range md.Get("origin") {
+		if strings.HasPrefix(strings.ToLower(strings.TrimSpace(value)), "https://") {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *APIV1Service) fetchCurrentUser(ctx context.Context) (*store.User, error) {

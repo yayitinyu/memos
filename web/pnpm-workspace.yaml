@@ -1,0 +1,8 @@
+allowBuilds:
+  esbuild: true
+overrides:
+  nanoid: 3.3.18
+  picomatch: 4.0.5
+  postcss: 8.5.26
+  preact: 10.29.8
+  rollup: 4.62.4

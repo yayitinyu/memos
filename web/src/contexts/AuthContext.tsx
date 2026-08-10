@@ -1,10 +1,12 @@
+import { Code, ConnectError } from "@connectrpc/connect";
 import { useQueryClient } from "@tanstack/react-query";
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
-import { clearAccessToken } from "@/auth-state";
-import { authServiceClient, shortcutServiceClient, userServiceClient } from "@/connect";
+import { clearAccessToken, getAccessToken, isTokenExpired } from "@/auth-state";
+import { authServiceClient, isDefinitiveAuthFailure, refreshAccessToken, shortcutServiceClient, userServiceClient } from "@/connect";
 import { userKeys } from "@/hooks/useUserQueries";
 import type { Shortcut } from "@/types/proto/api/v1/shortcut_service_pb";
 import type { User, UserSetting_GeneralSetting, UserSetting_WebhooksSetting } from "@/types/proto/api/v1/user_service_pb";
+import { redirectOnAuthFailure } from "@/utils/auth-redirect";
 
 interface AuthState {
   currentUser: User | undefined;
@@ -22,6 +24,15 @@ interface AuthContextValue extends AuthState {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+const signedOutState: AuthState = {
+  currentUser: undefined,
+  userGeneralSetting: undefined,
+  userWebhooksSetting: undefined,
+  shortcuts: [],
+  isInitialized: true,
+  isLoading: false,
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
@@ -53,18 +64,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const initialize = useCallback(async () => {
     setState((prev) => ({ ...prev, isLoading: true }));
     try {
+      if (!getAccessToken() || isTokenExpired()) {
+        try {
+          await refreshAccessToken();
+        } catch (error) {
+          // No refresh cookie is the normal anonymous-user path.
+          if (error instanceof ConnectError && error.code === Code.Unauthenticated) {
+            clearAccessToken();
+            setState(signedOutState);
+            redirectOnAuthFailure();
+            return;
+          }
+          throw error;
+        }
+      }
+
       const { user: currentUser } = await authServiceClient.getCurrentUser({});
 
       if (!currentUser) {
         clearAccessToken();
-        setState({
-          currentUser: undefined,
-          userGeneralSetting: undefined,
-          userWebhooksSetting: undefined,
-          shortcuts: [],
-          isInitialized: true,
-          isLoading: false,
-        });
+        setState(signedOutState);
         return;
       }
 
@@ -81,41 +100,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(userKeys.currentUser(), currentUser);
       queryClient.setQueryData(userKeys.detail(currentUser.name), currentUser);
     } catch (error) {
-      console.error("Failed to initialize auth:", error);
-      
-      // Check if this is an actual authentication error vs a network error
-      const isAuthError = error instanceof Error && 
-        (error.message.includes("unauthenticated") || 
-         error.message.includes("unauthorized") ||
-         error.message.includes("authentication required"));
-      
-      if (isAuthError) {
-        // Only clear token and redirect for real auth errors
+      if (isDefinitiveAuthFailure(error)) {
         clearAccessToken();
-        setState({
-          currentUser: undefined,
-          userGeneralSetting: undefined,
-          userWebhooksSetting: undefined,
-          shortcuts: [],
-          isInitialized: true,
-          isLoading: false,
-        });
-        
-        // Redirect to login page on auth failure (token expired, etc.)
-        import("@/utils/auth-redirect").then(({ redirectOnAuthFailure }) => {
-          redirectOnAuthFailure();
-        });
+        setState(signedOutState);
+        redirectOnAuthFailure();
       } else {
-        // For network errors, just mark as initialized without user
-        // User can try refreshing or the visibility change handler will retry
-        setState({
-          currentUser: undefined,
-          userGeneralSetting: undefined,
-          userWebhooksSetting: undefined,
-          shortcuts: [],
-          isInitialized: true,
-          isLoading: false,
-        });
+        // A transient network failure must not turn a valid local session into
+        // a signed-out state. Visibility changes will retry initialization.
+        console.warn("Failed to refresh the current session:", error);
+        setState((prev) => ({ ...prev, isInitialized: true, isLoading: false }));
       }
     }
   }, [fetchUserSettings, queryClient]);
@@ -127,14 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("[AuthContext] Failed to sign out:", error);
     } finally {
       clearAccessToken();
-      setState({
-        currentUser: undefined,
-        userGeneralSetting: undefined,
-        userWebhooksSetting: undefined,
-        shortcuts: [],
-        isInitialized: true,
-        isLoading: false,
-      });
+      setState(signedOutState);
       queryClient.clear();
     }
   }, [queryClient]);

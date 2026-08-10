@@ -1,6 +1,7 @@
 import { timestampDate } from "@bufbuild/protobuf/wkt";
 import { BookmarkIcon, EyeOffIcon, MessageCircleMoreIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import RelativeTime from "@/components/RelativeTime";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import i18n from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -29,16 +30,15 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({
   const t = useTranslate();
 
   const { memo, creator, parentPage, showNSFWContent, nsfw } = useMemoViewContext();
-  const { isArchived, readonly, isInMemoDetailPage, commentAmount, relativeTimeFormat } = useMemoViewDerived();
+  const { isArchived, readonly, isInMemoDetailPage, commentAmount } = useMemoViewDerived();
 
-  const displayTime = isArchived ? (
-    (memo.displayTime ? timestampDate(memo.displayTime) : undefined)?.toLocaleString(i18n.language)
-  ) : (
-    <relative-time
-      datetime={(memo.displayTime ? timestampDate(memo.displayTime) : undefined)?.toISOString()}
-      lang={i18n.language}
-      format={relativeTimeFormat}
-    ></relative-time>
+  const displayTime = (
+    <RelativeTime
+      date={memo.displayTime ? timestampDate(memo.displayTime) : undefined}
+      locale={i18n.language}
+      fallback={t("common.unknown-time")}
+      absolute={isArchived}
+    />
   );
 
   return (

@@ -58,6 +58,7 @@
     "layout": "Layout",
     "learn-more": "Learn more",
     "link": "Link",
+    "loading": "Loading...",
     "mark": "Mark",
     "memo": "Memo",
     "memos": "Memos",
@@ -107,7 +108,8 @@
     "version": "Version",
     "visibility": "Visibility",
     "yourself": "Yourself",
-    "more": "More"
+    "more": "More",
+    "unknown-time": "Unknown time"
   },
   "days": {
     "fri": "Fri",
@@ -125,7 +127,35 @@
     "no-changes-detected": "No changes detected",
     "focus-mode": "Focus Mode",
     "exit-focus-mode": "Exit Focus Mode",
-    "slash-commands": "Type `/` for commands"
+    "slash-commands": "Type `/` for commands",
+    "cannot-save": "Cannot save",
+    "validation": {
+      "content-required": "Content, an attachment, or a file is required",
+      "upload-in-progress": "Wait for the upload to finish",
+      "save-in-progress": "A save is already in progress"
+    },
+    "toolbar": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "strikethrough": "Strikethrough",
+      "code": "Inline code",
+      "code-block": "Code block",
+      "quote": "Quote",
+      "link": "Link",
+      "inline-math": "Inline formula",
+      "math-block": "Display formula",
+      "heading-1": "Heading 1",
+      "heading-2": "Heading 2",
+      "heading-3": "Heading 3",
+      "unordered-list": "Unordered list",
+      "ordered-list": "Ordered list",
+      "task-list": "Task list",
+      "table": "Table",
+      "undo": "Undo",
+      "redo": "Redo",
+      "paste": "Paste",
+      "toggle-line-numbers": "Toggle line numbers"
+    }
   },
   "filters": {
     "has-code": "hasCode",
@@ -137,7 +167,8 @@
     "failed-to-load": "Failed to load inbox item",
     "unread": "Unread",
     "no-unread": "No unread notifications",
-    "no-archived": "No archived notifications"
+    "no-archived": "No archived notifications",
+    "version-update": "New version {{version}} is now available!"
   },
   "markdown": {
     "checkbox": "Checkbox",
@@ -162,6 +193,7 @@
     "direction-asc": "Ascending",
     "direction-desc": "Descending",
     "display-time": "Display Time",
+    "embedded-content": "Embedded content",
     "filters": "Filters",
     "links": "Links",
     "load-more": "Load more",
@@ -318,7 +350,16 @@
     "preference-section": {
       "default-memo-sort-option": "Memo display time",
       "default-memo-visibility": "Default memo visibility",
-      "theme": "Theme"
+      "theme": "Theme",
+      "select-theme": "Select theme",
+      "theme-options": {
+        "system": "Sync with system",
+        "light": "Light",
+        "dark": "Dark",
+        "midnight": "Midnight",
+        "paper": "Paper",
+        "whitewall": "Whitewall"
+      }
     },
     "shortcut": {
       "delete-confirm": "Are you sure you want to delete shortcut `{{title}}`?",

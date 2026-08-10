@@ -327,6 +327,23 @@ func getDefaultUserGeneralSetting() *v1pb.UserSetting_GeneralSetting {
 	}
 }
 
+func getUserGeneralSettingWithDefaults(setting *storepb.GeneralUserSetting) *v1pb.UserSetting_GeneralSetting {
+	result := getDefaultUserGeneralSetting()
+	if setting == nil {
+		return result
+	}
+	if setting.Locale != "" {
+		result.Locale = setting.Locale
+	}
+	if setting.MemoVisibility != "" {
+		result.MemoVisibility = setting.MemoVisibility
+	}
+	if setting.Theme != "" {
+		result.Theme = setting.Theme
+	}
+	return result
+}
+
 func (s *APIV1Service) GetUserSetting(ctx context.Context, request *v1pb.GetUserSettingRequest) (*v1pb.UserSetting, error) {
 	// Parse resource name: users/{user}/settings/{setting}
 	userID, settingKey, err := ExtractUserIDAndSettingKeyFromName(request.Name)
@@ -405,17 +422,13 @@ func (s *APIV1Service) UpdateUserSetting(ctx context.Context, request *v1pb.Upda
 		Key:    storeKey,
 	})
 
-	generalSetting := &storepb.GeneralUserSetting{}
+	var generalSetting *storepb.GeneralUserSetting
 	if existingUserSetting != nil {
-		// Start with existing general setting values
 		generalSetting = existingUserSetting.GetGeneral()
 	}
-
-	updatedGeneral := &v1pb.UserSetting_GeneralSetting{
-		MemoVisibility: generalSetting.GetMemoVisibility(),
-		Locale:         generalSetting.GetLocale(),
-		Theme:          generalSetting.GetTheme(),
-	}
+	// Partial updates must start from API defaults when no row exists, and
+	// repair legacy rows that contain only one of the general-setting fields.
+	updatedGeneral := getUserGeneralSettingWithDefaults(generalSetting)
 
 	// Apply updates for fields specified in the update mask
 	incomingGeneral := request.Setting.GetGeneralSetting()
@@ -1048,18 +1061,8 @@ func convertUserSettingFromStore(storeSetting *storepb.UserSetting, userID int32
 
 	switch storeSetting.Key {
 	case storepb.UserSetting_GENERAL:
-		if general := storeSetting.GetGeneral(); general != nil {
-			setting.Value = &v1pb.UserSetting_GeneralSetting_{
-				GeneralSetting: &v1pb.UserSetting_GeneralSetting{
-					Locale:         general.Locale,
-					MemoVisibility: general.MemoVisibility,
-					Theme:          general.Theme,
-				},
-			}
-		} else {
-			setting.Value = &v1pb.UserSetting_GeneralSetting_{
-				GeneralSetting: getDefaultUserGeneralSetting(),
-			}
+		setting.Value = &v1pb.UserSetting_GeneralSetting_{
+			GeneralSetting: getUserGeneralSettingWithDefaults(storeSetting.GetGeneral()),
 		}
 	case storepb.UserSetting_WEBHOOKS:
 		webhooks := storeSetting.GetWebhooks()
@@ -1486,10 +1489,10 @@ func ExtractNotificationIDFromName(name string) (int32, error) {
 		return 0, errors.Errorf("invalid notification name: %s", name)
 	}
 
-	id, err := strconv.Atoi(matches[2])
+	id, err := util.ConvertStringToInt32(matches[2])
 	if err != nil {
 		return 0, errors.Errorf("invalid notification id: %s", matches[2])
 	}
 
-	return int32(id), nil
+	return id, nil
 }

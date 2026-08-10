@@ -2,6 +2,7 @@ package filter
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -557,14 +558,26 @@ func toInt64(value any) (int64, error) {
 	case uint32:
 		return int64(v), nil
 	case uint64:
+		if v > math.MaxInt64 {
+			return 0, errors.New("unsigned integer exceeds int64 range")
+		}
 		return int64(v), nil
 	case float32:
-		return int64(v), nil
+		return checkedFloatToInt64(float64(v))
 	case float64:
-		return int64(v), nil
+		return checkedFloatToInt64(v)
 	default:
 		return 0, errors.Errorf("cannot convert %T to int64", value)
 	}
+}
+
+func checkedFloatToInt64(value float64) (int64, error) {
+	const maxInt64Exclusive = 9223372036854775808.0
+	const minInt64Inclusive = -9223372036854775808.0
+	if math.IsNaN(value) || math.IsInf(value, 0) || value < minInt64Inclusive || value >= maxInt64Exclusive {
+		return 0, errors.New("floating-point value exceeds int64 range")
+	}
+	return int64(value), nil
 }
 
 func sqlOperator(op ComparisonOperator) string {

@@ -16,7 +16,8 @@ import (
 )
 
 func (d *DB) CreateMemo(ctx context.Context, create *store.Memo) (*store.Memo, error) {
-	fields := []string{"uid", "creator_id", "content", "visibility", "payload"}
+	now := time.Now().Unix()
+	fields := []string{"uid", "creator_id", "content", "visibility", "payload", "created_ts", "updated_ts"}
 	payload := "{}"
 	if create.Payload != nil {
 		payloadBytes, err := protojson.Marshal(create.Payload)
@@ -25,7 +26,7 @@ func (d *DB) CreateMemo(ctx context.Context, create *store.Memo) (*store.Memo, e
 		}
 		payload = string(payloadBytes)
 	}
-	args := []any{create.UID, create.CreatorID, create.Content, create.Visibility, payload}
+	args := []any{create.UID, create.CreatorID, create.Content, create.Visibility, payload, now, now}
 
 	stmt := "INSERT INTO memo (" + strings.Join(fields, ", ") + ") VALUES (" + placeholders(len(args)) + ") RETURNING id, created_ts, updated_ts, row_status"
 	var createdTs, updatedTs sql.NullInt64
@@ -38,16 +39,7 @@ func (d *DB) CreateMemo(ctx context.Context, create *store.Memo) (*store.Memo, e
 		return nil, err
 	}
 
-	if createdTs.Valid {
-		create.CreatedTs = createdTs.Int64
-	} else {
-		create.CreatedTs = time.Now().Unix()
-	}
-	if updatedTs.Valid {
-		create.UpdatedTs = updatedTs.Int64
-	} else {
-		create.UpdatedTs = time.Now().Unix()
-	}
+	create.CreatedTs, create.UpdatedTs = normalizeMemoTimestamps(createdTs, updatedTs)
 
 	return create, nil
 }
@@ -111,9 +103,9 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		orderBy = append(orderBy, "pinned DESC")
 	}
 	if find.OrderByUpdatedTs {
-		orderBy = append(orderBy, "updated_ts "+order)
+		orderBy = append(orderBy, "COALESCE(memo.updated_ts, memo.created_ts) "+order+" NULLS LAST")
 	} else {
-		orderBy = append(orderBy, "created_ts "+order)
+		orderBy = append(orderBy, "COALESCE(memo.created_ts, memo.updated_ts) "+order+" NULLS LAST")
 	}
 	// Add id as final tie-breaker
 	orderBy = append(orderBy, "id DESC")
@@ -175,16 +167,7 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		if err := rows.Scan(dests...); err != nil {
 			return nil, err
 		}
-		if createdTs.Valid {
-			memo.CreatedTs = createdTs.Int64
-		} else {
-			memo.CreatedTs = time.Now().Unix()
-		}
-		if updatedTs.Valid {
-			memo.UpdatedTs = updatedTs.Int64
-		} else {
-			memo.UpdatedTs = time.Now().Unix()
-		}
+		memo.CreatedTs, memo.UpdatedTs = normalizeMemoTimestamps(createdTs, updatedTs)
 		payload := &storepb.MemoPayload{}
 		if err := protojsonUnmarshaler.Unmarshal(payloadBytes, payload); err != nil {
 			return nil, errors.Wrap(err, "failed to unmarshal payload")
@@ -198,6 +181,26 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 	}
 
 	return list, nil
+}
+
+// normalizeMemoTimestamps repairs legacy PostgreSQL rows where one timestamp
+// is NULL without inventing a new timestamp each time the row is read.
+func normalizeMemoTimestamps(createdTs, updatedTs sql.NullInt64) (int64, int64) {
+	created, updated := int64(0), int64(0)
+	if createdTs.Valid && createdTs.Int64 > 0 {
+		created = createdTs.Int64
+	}
+	if updatedTs.Valid && updatedTs.Int64 > 0 {
+		updated = updatedTs.Int64
+	}
+
+	if created == 0 {
+		created = updated
+	}
+	if updated == 0 {
+		updated = created
+	}
+	return created, updated
 }
 
 func (d *DB) GetMemo(ctx context.Context, find *store.FindMemo) (*store.Memo, error) {

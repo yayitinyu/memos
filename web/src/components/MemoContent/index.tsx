@@ -9,6 +9,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
+import { normalizeMathDelimiters } from "@/utils/math";
 import { remarkDisableSetext } from "@/utils/remark-plugins/remark-disable-setext";
 import { remarkPreserveType } from "@/utils/remark-plugins/remark-preserve-type";
 import { remarkTag } from "@/utils/remark-plugins/remark-tag";
@@ -18,6 +19,7 @@ import { SANITIZE_SCHEMA } from "./constants";
 import { useCompactLabel, useCompactMode } from "./hooks";
 import { Tag } from "./Tag";
 import { TaskListItem } from "./TaskListItem";
+import { TrustedIframe } from "./TrustedIframe";
 import type { MemoContentProps } from "./types";
 
 const MemoContent = (props: MemoContentProps) => {
@@ -45,30 +47,35 @@ const MemoContent = (props: MemoContentProps) => {
       >
         <ReactMarkdown
           remarkPlugins={[remarkDisableSetext, remarkGfm, remarkBreaks, remarkMath, remarkTag, remarkPreserveType]}
-          rehypePlugins={[rehypeRaw, rehypeKatex, [rehypeSanitize, SANITIZE_SCHEMA]]}
+          rehypePlugins={[
+            rehypeRaw,
+            [rehypeSanitize, SANITIZE_SCHEMA],
+            [rehypeKatex, { output: "mathml", throwOnError: false, strict: false }],
+          ]}
           components={{
             // Child components consume from MemoViewContext directly
-            input: ((inputProps: React.ComponentProps<"input"> & { node?: Element }) => {
-              if (inputProps.node && isTaskListItemNode(inputProps.node)) {
-                return <TaskListItem {...inputProps} />;
+            input: (({ node, ...inputProps }: React.ComponentProps<"input"> & { node?: Element }) => {
+              if (node && isTaskListItemNode(node)) {
+                return <TaskListItem {...inputProps} node={node} />;
               }
               return <input {...inputProps} />;
             }) as React.ComponentType<React.ComponentProps<"input">>,
-            span: ((spanProps: React.ComponentProps<"span"> & { node?: Element }) => {
-              if (spanProps.node && isTagNode(spanProps.node)) {
-                return <Tag {...spanProps} />;
+            span: (({ node, ...spanProps }: React.ComponentProps<"span"> & { node?: Element }) => {
+              if (node && isTagNode(node)) {
+                return <Tag {...spanProps} node={node} />;
               }
               return <span {...spanProps} />;
             }) as React.ComponentType<React.ComponentProps<"span">>,
             pre: CodeBlock,
-            a: ({ href, children, ...aProps }) => (
+            iframe: TrustedIframe,
+            a: ({ href, children, node: _node, ...aProps }) => (
               <a href={href} target="_blank" rel="noopener noreferrer" {...aProps}>
                 {children}
               </a>
             ),
           }}
         >
-          {content}
+          {normalizeMathDelimiters(content)}
         </ReactMarkdown>
       </div>
       {showCompactMode === "ALL" && (
