@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useRef, useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { memoKeys } from "@/hooks/useMemoQueries";
@@ -11,10 +11,10 @@ import { useTranslate } from "@/utils/i18n";
 import { EditorContent, EditorMetadata, EditorToolbar, FocusModeOverlay } from "./components";
 import { FOCUS_MODE_STYLES } from "./constants";
 import type { EditorRefActions } from "./Editor";
-import MarkdownToolbar from "./Toolbar/MarkdownToolbar";
 import { useAutoSave, useFocusMode, useKeyboard, useMemoInit } from "./hooks";
 import { cacheService, errorService, memoService, validationService } from "./services";
 import { EditorProvider, useEditorContext } from "./state";
+import MarkdownToolbar from "./Toolbar/MarkdownToolbar";
 import type { MemoEditorProps } from "./types";
 
 const MemoEditor = (props: MemoEditorProps) => {
@@ -55,7 +55,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   // Line numbers are tracked separately - they persist within focus mode session
   // but are not shown when focus mode is off
   const [lineNumbersEnabled, setLineNumbersEnabled] = useState(false);
-  
+
   // Line numbers only show when both: focus mode is on AND user has enabled them
   const showLineNumbers = state.ui.isFocusMode && lineNumbersEnabled;
 
@@ -77,18 +77,17 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   };
 
   useEffect(() => {
-    if (state.ui.isFocusMode) {
-      // Delay focus to ensure DOM is ready after focus mode transition
-      setTimeout(() => {
-        const editor = editorRef.current;
-        if (editor) {
-          editor.focus();
-          // Move cursor to end of content
-          const len = editor.getContent?.()?.length ?? editor.getEditor?.()?.value?.length ?? 0;
-          editor.setCursorPosition?.(len, len);
-        }
-      }, 200);
-    }
+    if (!state.ui.isFocusMode) return;
+    // Delay focus to ensure DOM is ready after focus mode transition.
+    const timer = window.setTimeout(() => {
+      const editor = editorRef.current;
+      if (editor) {
+        editor.focus();
+        const len = editor.getContent().length;
+        editor.setCursorPosition(len);
+      }
+    }, 200);
+    return () => window.clearTimeout(timer);
   }, [state.ui.isFocusMode]);
 
   // Keyboard shortcuts
@@ -98,7 +97,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     // Validate before saving
     const { valid, reason } = validationService.canSave(state);
     if (!valid) {
-      toast.error(reason || "Cannot save");
+      toast.error(reason ? t(reason) : t("editor.cannot-save"));
       return;
     }
 
@@ -162,14 +161,8 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
           className,
         )}
       >
-
-
         {state.ui.isFocusMode && (
-          <MarkdownToolbar
-            editorRef={editorRef}
-            showLineNumbers={lineNumbersEnabled}
-            toggleShowLineNumbers={handleToggleLineNumbers}
-          />
+          <MarkdownToolbar editorRef={editorRef} showLineNumbers={lineNumbersEnabled} toggleShowLineNumbers={handleToggleLineNumbers} />
         )}
 
         {/* Editor content grows to fill available space in focus mode */}

@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"math"
 	"time"
 
 	"github.com/pkg/errors"
@@ -323,7 +324,11 @@ func getConstValue(expr *exprv1.Expr) (interface{}, error) {
 	case *exprv1.Constant_Int64Value:
 		return v.ConstExpr.GetInt64Value(), nil
 	case *exprv1.Constant_Uint64Value:
-		return int64(v.ConstExpr.GetUint64Value()), nil
+		value := v.ConstExpr.GetUint64Value()
+		if value > math.MaxInt64 {
+			return nil, errors.New("unsigned integer literal exceeds int64 range")
+		}
+		return int64(value), nil
 	case *exprv1.Constant_DoubleValue:
 		return v.ConstExpr.GetDoubleValue(), nil
 	case *exprv1.Constant_BoolValue:

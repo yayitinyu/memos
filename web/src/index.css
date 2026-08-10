@@ -1,9 +1,15 @@
+@import "../../fonts/chill-round/result.css";
+@import "../../fonts/maple-mono-cn/result.css";
+@import "../../fonts/NotoColorEmoji-Regular/result.css";
+@import "../../fonts/STIXTwoMath-Regular/result.css";
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "./themes/default.css";
 
 @theme {
   --default-transition-duration: 150ms;
+  --font-sans: "寒蝉全圆体", "Noto Color Emoji", ui-rounded, system-ui, sans-serif;
+  --font-mono: "Maple Mono CN", "Noto Color Emoji", ui-monospace, monospace;
 }
 
 @layer base {
@@ -15,6 +21,33 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+  code,
+  kbd,
+  pre,
+  samp,
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+  math,
+  .katex,
+  .katex math {
+    font-family: "STIX Two Math", serif;
+  }
+  .markdown-content .katex {
+    font-size: 1.1em;
+  }
+  .markdown-content .katex:has(> math[display="block"]) {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    text-align: center;
+  }
+  .markdown-content math[display="block"] {
+    display: block;
+    margin: 0.75rem auto;
   }
 
   /* ========================================

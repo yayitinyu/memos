@@ -1,7 +1,7 @@
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 import { defineConfig } from "vite";
-import tailwindcss from "@tailwindcss/vite";
 
 let devProxyServer = "http://localhost:8081";
 if (process.env.DEV_PROXY_SERVER && process.env.DEV_PROXY_SERVER.length > 0) {
@@ -15,6 +15,11 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 3001,
+    // Font subsets live at the repository root so they can be shared with
+    // other clients. Limit dev-server file access to this repository only.
+    fs: {
+      allow: [resolve(__dirname, "..")],
+    },
     proxy: {
       "^/api": {
         target: devProxyServer,

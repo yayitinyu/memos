@@ -100,6 +100,12 @@ func TestCacheEviction(t *testing.T) {
 	if evictedCount == 0 {
 		t.Error("No keys were evicted despite exceeding max items")
 	}
+	if _, ok := cache.Get(ctx, "key0"); ok {
+		t.Error("Oldest key 'key0' should have been evicted")
+	}
+	if _, ok := cache.Get(ctx, "key1"); ok {
+		t.Error("Second-oldest key 'key1' should have been evicted")
+	}
 
 	// The newer keys should still be present
 	if _, ok := cache.Get(ctx, "keyA"); !ok {

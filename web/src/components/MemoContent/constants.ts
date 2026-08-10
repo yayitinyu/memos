@@ -7,63 +7,33 @@ export const COMPACT_STATES: Record<"ALL" | "SNIPPET", { textKey: string; next: 
   SNIPPET: { textKey: "memo.show-less", next: "ALL" },
 };
 
-/**
- * Sanitization schema for markdown HTML content.
- * Extends the default schema to allow:
- * - KaTeX math rendering elements (MathML tags)
- * - KaTeX-specific attributes (className, style, aria-*, data-*)
- * - Safe HTML elements for rich content
- * - iframe embeds for trusted video providers (YouTube, Vimeo, etc.)
- *
- * This prevents XSS attacks while preserving math rendering functionality.
- */
+const TRUSTED_IFRAME_SRC_PATTERNS = [
+  /^https:\/\/www\.youtube\.com\/embed\/[^?#]+(?:\?.*)?$/i,
+  /^https:\/\/www\.youtube-nocookie\.com\/embed\/[^?#]+(?:\?.*)?$/i,
+  /^https:\/\/player\.vimeo\.com\/video\/[^?#]+(?:\?.*)?$/i,
+  /^https:\/\/open\.spotify\.com\/embed\/[^?#]+(?:\?.*)?$/i,
+  /^https:\/\/w\.soundcloud\.com\/player\/?(?:\?.*)?$/i,
+  /^https:\/\/www\.loom\.com\/embed\/[^?#]+(?:\?.*)?$/i,
+  /^https:\/\/www\.google\.com\/maps\/embed(?:\/[^?#]*)?(?:\?.*)?$/i,
+  /^https:\/\/(?:app\.)?diagrams\.net\/(?:[^?#]+)?(?:\?.*)?$/i,
+  /^https:\/\/(?:www\.)?draw\.io\/(?:[^?#]+)?(?:\?.*)?$/i,
+];
+
+export const isTrustedIframeSrc = (src: string): boolean => TRUSTED_IFRAME_SRC_PATTERNS.some((pattern) => pattern.test(src));
+
 export const SANITIZE_SCHEMA = {
   ...defaultSchema,
   attributes: {
     ...defaultSchema.attributes,
-    div: [...(defaultSchema.attributes?.div || []), "className"],
-    span: [...(defaultSchema.attributes?.span || []), "className", "style", ["aria*"], ["data*"]],
-    // iframe attributes for video embeds
-    iframe: ["src", "width", "height", "frameborder", "allowfullscreen", "allow", "title", "referrerpolicy", "loading"],
-    // MathML attributes for KaTeX rendering
-    annotation: ["encoding"],
-    math: ["xmlns"],
-    mi: [],
-    mn: [],
-    mo: [],
-    mrow: [],
-    mspace: [],
-    mstyle: [],
-    msup: [],
-    msub: [],
-    msubsup: [],
-    mfrac: [],
-    mtext: [],
-    semantics: [],
+    img: [...(defaultSchema.attributes?.img || []), "height", "width"],
+    input: [...(defaultSchema.attributes?.input || []), ["checked", true]],
+    code: [...(defaultSchema.attributes?.code || []), ["className", "language-math", "math-inline", "math-display"]],
+    span: [...(defaultSchema.attributes?.span || []), ["className", "tag"], ["aria*"], ["data*"]],
+    iframe: [["src", ...TRUSTED_IFRAME_SRC_PATTERNS], "width", "height", "frameborder", "allowfullscreen", "title", "loading"],
   },
-  tagNames: [
-    ...(defaultSchema.tagNames || []),
-    // iframe for video embeds
-    "iframe",
-    // MathML elements for KaTeX math rendering
-    "math",
-    "annotation",
-    "semantics",
-    "mi",
-    "mn",
-    "mo",
-    "mrow",
-    "mspace",
-    "mstyle",
-    "msup",
-    "msub",
-    "msubsup",
-    "mfrac",
-    "mtext",
-  ],
+  tagNames: [...(defaultSchema.tagNames || []), "iframe"],
   protocols: {
     ...defaultSchema.protocols,
-    // Allow HTTPS iframe embeds only for security
-    iframe: { src: ["https"] },
+    src: ["https"],
   },
 };

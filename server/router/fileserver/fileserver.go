@@ -398,7 +398,7 @@ func (s *FileServerService) getAttachmentBlob(attachment *store.Attachment) ([]b
 // Uses semaphore to limit concurrent thumbnail generation and prevent memory exhaustion.
 func (s *FileServerService) getOrGenerateThumbnail(ctx context.Context, attachment *store.Attachment) ([]byte, error) {
 	thumbnailCacheFolder := filepath.Join(s.Profile.Data, ThumbnailCacheFolder)
-	if err := os.MkdirAll(thumbnailCacheFolder, os.ModePerm); err != nil {
+	if err := os.MkdirAll(thumbnailCacheFolder, 0750); err != nil {
 		return nil, errors.Wrap(err, "failed to create thumbnail cache folder")
 	}
 	filePath := filepath.Join(thumbnailCacheFolder, fmt.Sprintf("%d%s", attachment.ID, filepath.Ext(attachment.Filename)))
@@ -478,9 +478,22 @@ func (s *FileServerService) getOrGenerateThumbnail(ctx context.Context, attachme
 	// Resize the image to the calculated dimensions.
 	thumbnailImage := imaging.Resize(img, thumbnailWidth, thumbnailHeight, imaging.Lanczos)
 
-	// Save thumbnail to disk
-	if err := imaging.Save(thumbnailImage, filePath); err != nil {
+	thumbnailFormat := imaging.JPEG
+	if attachment.Type == "image/png" {
+		thumbnailFormat = imaging.PNG
+	}
+	thumbnailOutput, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create thumbnail file")
+	}
+	if err := imaging.Encode(thumbnailOutput, thumbnailImage, thumbnailFormat); err != nil {
+		thumbnailOutput.Close()
+		_ = os.Remove(filePath)
 		return nil, errors.Wrap(err, "failed to save thumbnail file")
+	}
+	if err := thumbnailOutput.Close(); err != nil {
+		_ = os.Remove(filePath)
+		return nil, errors.Wrap(err, "failed to close thumbnail file")
 	}
 
 	// Read the saved thumbnail and return it

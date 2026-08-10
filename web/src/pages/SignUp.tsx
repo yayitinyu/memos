@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf";
 import { timestampDate } from "@bufbuild/protobuf/wkt";
 import { LoaderIcon } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { setAccessToken } from "@/auth-state";
@@ -21,6 +21,7 @@ const SignUp = () => {
   const t = useTranslate();
   const navigateTo = useNavigateTo();
   const actionBtnLoadingState = useLoading(false);
+  const submittingRef = useRef(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const { generalSetting: instanceGeneralSetting, profile } = useInstance();
@@ -36,22 +37,21 @@ const SignUp = () => {
     setPassword(text);
   };
 
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    handleSignUpButtonClick();
-  };
-
-  const handleSignUpButtonClick = async () => {
     if (username === "" || password === "") {
       return;
     }
 
-    if (actionBtnLoadingState.isLoading) {
+    // State updates do not become visible synchronously, so keep an immediate
+    // guard as well to prevent two rapid submit events from creating the user twice.
+    if (submittingRef.current) {
       return;
     }
 
+    submittingRef.current = true;
+    actionBtnLoadingState.setLoading();
     try {
-      actionBtnLoadingState.setLoading();
       const user = create(UserSchema, {
         username,
         password,
@@ -74,8 +74,10 @@ const SignUp = () => {
       handleError(error, toast.error, {
         fallbackMessage: "Sign up failed",
       });
+    } finally {
+      submittingRef.current = false;
+      actionBtnLoadingState.setFinish();
     }
-    actionBtnLoadingState.setFinish();
   };
 
   return (
@@ -122,7 +124,7 @@ const SignUp = () => {
                 </div>
               </div>
               <div className="flex flex-row justify-end items-center w-full mt-6">
-                <Button type="submit" className="w-full h-10" disabled={actionBtnLoadingState.isLoading} onClick={handleSignUpButtonClick}>
+                <Button type="submit" className="w-full h-10" disabled={actionBtnLoadingState.isLoading}>
                   {t("common.sign-up")}
                   {actionBtnLoadingState.isLoading && <LoaderIcon className="w-5 h-auto ml-2 animate-spin opacity-60" />}
                 </Button>

@@ -1,8 +1,30 @@
-import { BoldIcon, CheckSquareIcon, ClipboardIcon, Code2Icon, CodeIcon, Heading1Icon, Heading2Icon, Heading3Icon, ItalicIcon, LinkIcon, ListIcon, ListOrderedIcon, QuoteIcon, Redo2Icon, StrikethroughIcon, TableIcon, HashIcon, Undo2Icon } from "lucide-react";
-import { RefObject } from "react";
+import {
+  BoldIcon,
+  CheckSquareIcon,
+  ClipboardIcon,
+  Code2Icon,
+  CodeIcon,
+  HashIcon,
+  Heading1Icon,
+  Heading2Icon,
+  Heading3Icon,
+  ItalicIcon,
+  LinkIcon,
+  ListIcon,
+  ListOrderedIcon,
+  QuoteIcon,
+  Redo2Icon,
+  SigmaIcon,
+  SquareFunctionIcon,
+  StrikethroughIcon,
+  TableIcon,
+  Undo2Icon,
+} from "lucide-react";
+import type { RefObject } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { type Translations, useTranslate } from "@/utils/i18n";
 import type { EditorRefActions } from "../Editor";
 
 interface MarkdownToolbarProps {
@@ -11,41 +33,48 @@ interface MarkdownToolbarProps {
   toggleShowLineNumbers?: () => void;
 }
 
-// Grouped actions for better organization
-// Removed \n prefix from headings, lists, todos, table - insert at current position
-const actionGroups = [
-  // Text formatting
+interface ToolbarAction {
+  icon: typeof BoldIcon;
+  labelKey: Translations;
+  prefix: string;
+  suffix: string;
+}
+
+const actionGroups: ToolbarAction[][] = [
   [
-    { icon: BoldIcon, label: "Bold", prefix: "**", suffix: "**" },
-    { icon: ItalicIcon, label: "Italic", prefix: "*", suffix: "*" },
-    { icon: StrikethroughIcon, label: "Strikethrough", prefix: "~~", suffix: "~~" },
-    { icon: CodeIcon, label: "Code", prefix: "`", suffix: "`" },
+    { icon: BoldIcon, labelKey: "editor.toolbar.bold", prefix: "**", suffix: "**" },
+    { icon: ItalicIcon, labelKey: "editor.toolbar.italic", prefix: "*", suffix: "*" },
+    { icon: StrikethroughIcon, labelKey: "editor.toolbar.strikethrough", prefix: "~~", suffix: "~~" },
+    { icon: CodeIcon, labelKey: "editor.toolbar.code", prefix: "`", suffix: "`" },
   ],
-  // Block elements
   [
-    { icon: Code2Icon, label: "Code Block", prefix: "```\n", suffix: "\n```" },
-    { icon: QuoteIcon, label: "Quote", prefix: "> ", suffix: "" },
-    { icon: LinkIcon, label: "Link", prefix: "[", suffix: "](url)" },
+    { icon: Code2Icon, labelKey: "editor.toolbar.code-block", prefix: "```\n", suffix: "\n```" },
+    { icon: QuoteIcon, labelKey: "editor.toolbar.quote", prefix: "> ", suffix: "" },
+    { icon: LinkIcon, labelKey: "editor.toolbar.link", prefix: "[", suffix: "](url)" },
+    { icon: SigmaIcon, labelKey: "editor.toolbar.inline-math", prefix: "$", suffix: "$" },
+    { icon: SquareFunctionIcon, labelKey: "editor.toolbar.math-block", prefix: "$$\n", suffix: "\n$$" },
   ],
-  // Headings - insert at current line
   [
-    { icon: Heading1Icon, label: "Heading 1", prefix: "# ", suffix: "" },
-    { icon: Heading2Icon, label: "Heading 2", prefix: "## ", suffix: "" },
-    { icon: Heading3Icon, label: "Heading 3", prefix: "### ", suffix: "" },
+    { icon: Heading1Icon, labelKey: "editor.toolbar.heading-1", prefix: "# ", suffix: "" },
+    { icon: Heading2Icon, labelKey: "editor.toolbar.heading-2", prefix: "## ", suffix: "" },
+    { icon: Heading3Icon, labelKey: "editor.toolbar.heading-3", prefix: "### ", suffix: "" },
   ],
-  // Lists & Table - insert at current line
   [
-    { icon: ListIcon, label: "Unordered List", prefix: "- ", suffix: "" },
-    { icon: ListOrderedIcon, label: "Ordered List", prefix: "1. ", suffix: "" },
-    { icon: CheckSquareIcon, label: "Task List", prefix: "- [ ] ", suffix: "" },
-    { icon: TableIcon, label: "Table", prefix: "| Header | Header |\n| --- | --- |\n| Cell | Cell |", suffix: "" },
+    { icon: ListIcon, labelKey: "editor.toolbar.unordered-list", prefix: "- ", suffix: "" },
+    { icon: ListOrderedIcon, labelKey: "editor.toolbar.ordered-list", prefix: "1. ", suffix: "" },
+    { icon: CheckSquareIcon, labelKey: "editor.toolbar.task-list", prefix: "- [ ] ", suffix: "" },
+    {
+      icon: TableIcon,
+      labelKey: "editor.toolbar.table",
+      prefix: "| Header | Header |\n| --- | --- |\n| Cell | Cell |",
+      suffix: "",
+    },
   ],
 ];
 
 const MarkdownToolbar = ({ editorRef, showLineNumbers, toggleShowLineNumbers }: MarkdownToolbarProps) => {
-  const handleInsert = (prefix: string, suffix: string = "") => {
-    editorRef.current?.insertText("", prefix, suffix);
-  };
+  const t = useTranslate();
+  const handleInsert = (prefix: string, suffix = "") => editorRef.current?.insertText("", prefix, suffix);
 
   const handleUndo = () => {
     document.execCommand("undo");
@@ -59,77 +88,68 @@ const MarkdownToolbar = ({ editorRef, showLineNumbers, toggleShowLineNumbers }: 
 
   const handlePaste = async () => {
     try {
-      const text = await navigator.clipboard.readText();
-      editorRef.current?.insertText(text);
-    } catch (err) {
-      // Fallback: trigger paste via execCommand
+      editorRef.current?.insertText(await navigator.clipboard.readText());
+    } catch {
       document.execCommand("paste");
     }
     editorRef.current?.focus();
   };
 
+  const utilityActions = [
+    { label: t("editor.toolbar.undo"), icon: Undo2Icon, onClick: handleUndo },
+    { label: t("editor.toolbar.redo"), icon: Redo2Icon, onClick: handleRedo },
+    { label: t("editor.toolbar.paste"), icon: ClipboardIcon, onClick: handlePaste },
+  ];
+
   return (
     <div className="flex flex-wrap items-center gap-1 px-2 sm:px-4 py-2 border-b border-border bg-background sticky top-0 z-20 overflow-x-auto">
       <TooltipProvider>
-        {/* Undo/Redo/Paste group */}
         <div className="flex items-center gap-0.5">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleUndo}>
-                <Undo2Icon className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent><p>Undo</p></TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleRedo}>
-                <Redo2Icon className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent><p>Redo</p></TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePaste}>
-                <ClipboardIcon className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent><p>Paste</p></TooltipContent>
-          </Tooltip>
+          {utilityActions.map((action) => (
+            <Tooltip key={action.label}>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={action.onClick} aria-label={action.label}>
+                  <action.icon className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{action.label}</p>
+              </TooltipContent>
+            </Tooltip>
+          ))}
         </div>
-        <div className="w-[1px] h-5 bg-border mx-1" />
+        <div className="w-px h-5 bg-border mx-1" />
 
         {actionGroups.map((group, groupIndex) => (
-          <div key={groupIndex} className="flex items-center gap-0.5">
-            {group.map((action) => (
-              <Tooltip key={action.label}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => handleInsert(action.prefix, action.suffix)}
-                  >
-                    <action.icon className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{action.label}</p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-            {groupIndex < actionGroups.length - 1 && (
-              <div className="w-[1px] h-5 bg-border mx-1" />
-            )}
+          <div key={group.map((action) => action.labelKey).join("-")} className="flex items-center gap-0.5">
+            {group.map((action) => {
+              const label = t(action.labelKey);
+              return (
+                <Tooltip key={action.labelKey}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleInsert(action.prefix, action.suffix)}
+                      aria-label={label}
+                    >
+                      <action.icon className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{label}</p>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+            {groupIndex < actionGroups.length - 1 && <div className="w-px h-5 bg-border mx-1" />}
           </div>
         ))}
       </TooltipProvider>
 
-      {/* Spacer to push line numbers toggle to right */}
       <div className="flex-1" />
 
-      {/* Line numbers toggle */}
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -138,12 +158,13 @@ const MarkdownToolbar = ({ editorRef, showLineNumbers, toggleShowLineNumbers }: 
               size="icon"
               className={cn("h-8 w-8", showLineNumbers && "bg-muted-foreground/20")}
               onClick={toggleShowLineNumbers}
+              aria-label={t("editor.toolbar.toggle-line-numbers")}
             >
               <HashIcon className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Toggle Line Numbers</p>
+            <p>{t("editor.toolbar.toggle-line-numbers")}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -152,5 +173,3 @@ const MarkdownToolbar = ({ editorRef, showLineNumbers, toggleShowLineNumbers }: 
 };
 
 export default MarkdownToolbar;
-
-

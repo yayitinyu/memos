@@ -1,73 +1,39 @@
-// Access token storage using localStorage for persistence across browser sessions
-// localStorage persists until explicitly cleared, keeping users logged in
+// Access tokens deliberately stay in memory. Session persistence is provided by
+// the HttpOnly refresh-token cookie, which is unavailable to injected scripts.
 let accessToken: string | null = null;
 let tokenExpiresAt: Date | null = null;
 
-const TOKEN_KEY = "memos_access_token";
-const EXPIRES_KEY = "memos_token_expires_at";
+const LEGACY_TOKEN_KEYS = ["memos_access_token", "memos_token_expires_at"] as const;
 
-export const getAccessToken = (): string | null => {
-  // If not in memory, try to restore from localStorage
-  if (!accessToken) {
-    try {
-      const storedToken = localStorage.getItem(TOKEN_KEY);
-      const storedExpires = localStorage.getItem(EXPIRES_KEY);
-
-      if (storedToken && storedExpires) {
-        const expiresAt = new Date(storedExpires);
-        // Only restore if token hasn't expired
-        if (expiresAt > new Date()) {
-          accessToken = storedToken;
-          tokenExpiresAt = expiresAt;
-        } else {
-          // Token expired, clean up localStorage
-          localStorage.removeItem(TOKEN_KEY);
-          localStorage.removeItem(EXPIRES_KEY);
-        }
-      }
-    } catch (e) {
-      // localStorage might not be available (e.g., in some privacy modes)
-      console.warn("Failed to access localStorage:", e);
+const removeLegacyStoredTokens = (): void => {
+  try {
+    for (const key of LEGACY_TOKEN_KEYS) {
+      localStorage.removeItem(key);
     }
+  } catch {
+    // Storage can be unavailable in hardened browser modes. The in-memory
+    // token flow still works, so no action is required here.
   }
-  return accessToken;
 };
+
+removeLegacyStoredTokens();
+
+export const getAccessToken = (): string | null => accessToken;
 
 export const setAccessToken = (token: string | null, expiresAt?: Date): void => {
   accessToken = token;
-  tokenExpiresAt = expiresAt || null;
-
-  try {
-    if (token && expiresAt) {
-      // Store in localStorage for persistence across browser sessions
-      localStorage.setItem(TOKEN_KEY, token);
-      localStorage.setItem(EXPIRES_KEY, expiresAt.toISOString());
-    } else {
-      // Clear localStorage if token is being cleared
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(EXPIRES_KEY);
-    }
-  } catch (e) {
-    // localStorage might not be available (e.g., in some privacy modes)
-    console.warn("Failed to write to localStorage:", e);
-  }
+  tokenExpiresAt = expiresAt ?? null;
+  removeLegacyStoredTokens();
 };
 
 export const isTokenExpired = (): boolean => {
-  if (!tokenExpiresAt) return true;
-  // Consider expired 30 seconds before actual expiry for safety
-  return new Date() >= new Date(tokenExpiresAt.getTime() - 30000);
+  if (!accessToken || !tokenExpiresAt) return true;
+  // Refresh slightly early so a token cannot expire while a request is in flight.
+  return Date.now() >= tokenExpiresAt.getTime() - 30_000;
 };
 
 export const clearAccessToken = (): void => {
   accessToken = null;
   tokenExpiresAt = null;
-
-  try {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(EXPIRES_KEY);
-  } catch (e) {
-    console.warn("Failed to clear localStorage:", e);
-  }
+  removeLegacyStoredTokens();
 };
-

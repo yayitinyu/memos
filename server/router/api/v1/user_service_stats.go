@@ -164,7 +164,12 @@ func (s *APIV1Service) GetUserStats(ctx context.Context, request *v1pb.GetUserSt
 		if instanceMemoRelatedSetting.DisplayWithUpdateTime {
 			displayTs = memo.UpdatedTs
 		}
-		displayTimestamps = append(displayTimestamps, timestamppb.New(time.Unix(displayTs, 0)))
+		if displayTs <= 0 {
+			displayTs = memo.CreatedTs
+		}
+		if displayTs > 0 {
+			displayTimestamps = append(displayTimestamps, timestamppb.New(time.Unix(displayTs, 0)))
+		}
 		// Count different memo types based on content.
 		if memo.Payload != nil {
 			for _, tag := range memo.Payload.Tags {

@@ -3,7 +3,7 @@ import { ExternalLinkIcon } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import { MemoRenderContext } from "@/components/MasonryView";
-import MemoView from "@/components/MemoView";
+import MemoView from "@/components/MemoView/MemoView";
 import PagedMemoList from "@/components/PagedMemoList";
 import UserAvatar from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
