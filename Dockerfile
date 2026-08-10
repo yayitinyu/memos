@@ -1,9 +1,10 @@
 # Build frontend
 FROM node:22-alpine AS frontend
 WORKDIR /app/web
-COPY web/package.json web/pnpm-lock.yaml ./
+COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./
 RUN corepack enable && pnpm install --frozen-lockfile
 COPY web .
+COPY fonts /app/fonts
 RUN pnpm build
 
 # Build backend
