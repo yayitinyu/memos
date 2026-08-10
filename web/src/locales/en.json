@@ -135,6 +135,7 @@
       "save-in-progress": "A save is already in progress"
     },
     "toolbar": {
+      "label": "Formatting toolbar",
       "bold": "Bold",
       "italic": "Italic",
       "strikethrough": "Strikethrough",
@@ -154,6 +155,9 @@
       "undo": "Undo",
       "redo": "Redo",
       "paste": "Paste",
+      "clear": "Clear all",
+      "clear-confirm": "Clear editor content?",
+      "clear-confirm-description": "This will remove the current draft text and pending uploads. This cannot be undone.",
       "toggle-line-numbers": "Toggle line numbers"
     }
   },

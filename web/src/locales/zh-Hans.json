@@ -135,6 +135,7 @@
       "save-in-progress": "正在保存，请稍候"
     },
     "toolbar": {
+      "label": "格式化工具栏",
       "bold": "粗体",
       "italic": "斜体",
       "strikethrough": "删除线",
@@ -154,6 +155,9 @@
       "undo": "撤销",
       "redo": "重做",
       "paste": "粘贴",
+      "clear": "一键清空",
+      "clear-confirm": "清空编辑器内容？",
+      "clear-confirm-description": "将删除当前草稿文字和待上传文件，此操作无法撤销。",
       "toggle-line-numbers": "切换行号"
     }
   },

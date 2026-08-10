@@ -143,32 +143,50 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     }
   }
 
+  const handleClearContent = () => {
+    editorRef.current?.setContent("");
+    cacheService.clear(cacheService.key(currentUser?.name ?? "", cacheKey));
+    // Drop pending local uploads so "clear" fully resets the draft area.
+    if (state.localFiles.length > 0) {
+      dispatch(actions.clearLocalFiles());
+    }
+  };
+
+  const canClear = state.content.trim().length > 0 || state.localFiles.length > 0;
+
   return (
     <>
       <FocusModeOverlay isActive={state.ui.isFocusMode} onToggle={handleToggleFocusMode} />
 
       {/*
         Layout structure:
-        - Uses justify-between to push content to top and bottom
+        - Sticky markdown toolbar always available (including mobile)
         - In focus mode: becomes fixed with specific spacing, editor grows to fill space
         - In normal mode: stays relative with max-height constraint
       */}
       <div
         className={cn(
-          "group relative w-full flex flex-col justify-between items-start bg-card px-4 pt-3 pb-1 rounded-lg border border-border",
+          "group relative w-full flex flex-col justify-between items-start bg-card px-4 pt-0 pb-1 rounded-lg border border-border overflow-hidden",
           FOCUS_MODE_STYLES.transition,
-          state.ui.isFocusMode && cn(FOCUS_MODE_STYLES.container.base, FOCUS_MODE_STYLES.container.spacing),
+          state.ui.isFocusMode && cn(FOCUS_MODE_STYLES.container.base, FOCUS_MODE_STYLES.container.spacing, "overflow-y-auto"),
           className,
         )}
       >
-        {state.ui.isFocusMode && (
-          <MarkdownToolbar editorRef={editorRef} showLineNumbers={lineNumbersEnabled} toggleShowLineNumbers={handleToggleLineNumbers} />
-        )}
+        <MarkdownToolbar
+          editorRef={editorRef}
+          showLineNumbers={lineNumbersEnabled}
+          toggleShowLineNumbers={handleToggleLineNumbers}
+          showLineNumberToggle={state.ui.isFocusMode}
+          onClear={handleClearContent}
+          canClear={canClear}
+        />
 
         {/* Editor content grows to fill available space in focus mode */}
-        <EditorContent ref={editorRef} placeholder={placeholder} autoFocus={autoFocus} showLineNumbers={showLineNumbers} />
+        <div className={cn("w-full flex flex-col flex-1 min-h-0 pt-2", state.ui.isFocusMode && "min-h-[40vh]")}>
+          <EditorContent ref={editorRef} placeholder={placeholder} autoFocus={autoFocus} showLineNumbers={showLineNumbers} />
+        </div>
 
-        {/* Metadata and toolbar grouped together at bottom */}
+        {/* Metadata and action bar grouped together at bottom */}
         <div className="w-full flex flex-col gap-2">
           <EditorMetadata />
           <EditorToolbar onSave={handleSave} onCancel={onCancel} memoName={memoName} />
