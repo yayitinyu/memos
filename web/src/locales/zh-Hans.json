@@ -157,7 +157,12 @@
       "paste": "粘贴",
       "clear": "一键清空",
       "clear-confirm": "清空编辑器内容？",
-      "clear-confirm-description": "将删除当前草稿文字和待上传文件，此操作无法撤销。",
+      "clear-confirm-description": "将删除当前草稿文字、待上传文件、已关联附件、关联笔记和位置信息，此操作无法撤销。",
+      "more": "更多格式",
+      "group-text": "文本与块",
+      "group-heading": "标题",
+      "group-list": "列表与表格",
+      "group-math": "公式",
       "toggle-line-numbers": "切换行号"
     }
   },

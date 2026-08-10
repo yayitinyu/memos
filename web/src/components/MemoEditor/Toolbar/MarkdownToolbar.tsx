@@ -4,6 +4,7 @@ import {
   ClipboardIcon,
   Code2Icon,
   CodeIcon,
+  EllipsisIcon,
   EraserIcon,
   HashIcon,
   Heading1Icon,
@@ -25,6 +26,14 @@ import type { RefObject } from "react";
 import { useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { type Translations, useTranslate } from "@/utils/i18n";
@@ -48,6 +57,12 @@ interface ToolbarAction {
   suffix: string;
 }
 
+interface ToolbarMenuGroup {
+  labelKey: Translations;
+  actions: ToolbarAction[];
+}
+
+/** Full desktop toolbar groups (left → right). */
 const actionGroups: ToolbarAction[][] = [
   [
     { icon: BoldIcon, labelKey: "editor.toolbar.bold", prefix: "**", suffix: "**" },
@@ -80,6 +95,55 @@ const actionGroups: ToolbarAction[][] = [
   ],
 ];
 
+/** Always-visible primary actions on narrow screens. */
+const mobilePrimaryActions: ToolbarAction[] = [
+  { icon: BoldIcon, labelKey: "editor.toolbar.bold", prefix: "**", suffix: "**" },
+  { icon: ItalicIcon, labelKey: "editor.toolbar.italic", prefix: "*", suffix: "*" },
+  { icon: ListIcon, labelKey: "editor.toolbar.unordered-list", prefix: "- ", suffix: "" },
+  { icon: LinkIcon, labelKey: "editor.toolbar.link", prefix: "[", suffix: "](url)" },
+];
+
+/** Overflow menu groups on narrow screens (everything not in primary). */
+const mobileOverflowGroups: ToolbarMenuGroup[] = [
+  {
+    labelKey: "editor.toolbar.group-text",
+    actions: [
+      { icon: StrikethroughIcon, labelKey: "editor.toolbar.strikethrough", prefix: "~~", suffix: "~~" },
+      { icon: CodeIcon, labelKey: "editor.toolbar.code", prefix: "`", suffix: "`" },
+      { icon: Code2Icon, labelKey: "editor.toolbar.code-block", prefix: "```\n", suffix: "\n```" },
+      { icon: QuoteIcon, labelKey: "editor.toolbar.quote", prefix: "> ", suffix: "" },
+    ],
+  },
+  {
+    labelKey: "editor.toolbar.group-heading",
+    actions: [
+      { icon: Heading1Icon, labelKey: "editor.toolbar.heading-1", prefix: "# ", suffix: "" },
+      { icon: Heading2Icon, labelKey: "editor.toolbar.heading-2", prefix: "## ", suffix: "" },
+      { icon: Heading3Icon, labelKey: "editor.toolbar.heading-3", prefix: "### ", suffix: "" },
+    ],
+  },
+  {
+    labelKey: "editor.toolbar.group-list",
+    actions: [
+      { icon: ListOrderedIcon, labelKey: "editor.toolbar.ordered-list", prefix: "1. ", suffix: "" },
+      { icon: CheckSquareIcon, labelKey: "editor.toolbar.task-list", prefix: "- [ ] ", suffix: "" },
+      {
+        icon: TableIcon,
+        labelKey: "editor.toolbar.table",
+        prefix: "| Header | Header |\n| --- | --- |\n| Cell | Cell |",
+        suffix: "",
+      },
+    ],
+  },
+  {
+    labelKey: "editor.toolbar.group-math",
+    actions: [
+      { icon: SigmaIcon, labelKey: "editor.toolbar.inline-math", prefix: "$", suffix: "$" },
+      { icon: SquareFunctionIcon, labelKey: "editor.toolbar.math-block", prefix: "$$\n", suffix: "\n$$" },
+    ],
+  },
+];
+
 const toolbarButtonClass = "h-9 w-9 shrink-0 touch-manipulation sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground";
 
 const MarkdownToolbar = ({
@@ -93,7 +157,10 @@ const MarkdownToolbar = ({
   const t = useTranslate();
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
 
-  const handleInsert = (prefix: string, suffix = "") => editorRef.current?.insertText("", prefix, suffix);
+  const handleInsert = (prefix: string, suffix = "") => {
+    editorRef.current?.insertText("", prefix, suffix);
+    editorRef.current?.focus();
+  };
 
   const handleUndo = () => {
     document.execCommand("undo");
@@ -125,109 +192,150 @@ const MarkdownToolbar = ({
     { label: t("editor.toolbar.paste"), icon: ClipboardIcon, onClick: handlePaste },
   ];
 
+  const renderIconButton = (key: string, label: string, Icon: typeof BoldIcon, onClick: () => void, active = false) => (
+    <Tooltip key={key}>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(toolbarButtonClass, active && "bg-muted-foreground/20 text-foreground")}
+          onClick={onClick}
+          aria-label={label}
+        >
+          <Icon className="w-4 h-4" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>{label}</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+
+  const trailingActions = (
+    <div className="flex items-center gap-0.5 shrink-0 pl-1">
+      {onClear && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(toolbarButtonClass, canClear && "text-destructive/80 hover:text-destructive")}
+              onClick={() => setClearDialogOpen(true)}
+              disabled={!canClear}
+              aria-label={t("editor.toolbar.clear")}
+            >
+              <EraserIcon className="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{t("editor.toolbar.clear")}</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
+
+      {showLineNumberToggle && toggleShowLineNumbers && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(toolbarButtonClass, showLineNumbers && "bg-muted-foreground/20 text-foreground")}
+              onClick={toggleShowLineNumbers}
+              aria-label={t("editor.toolbar.toggle-line-numbers")}
+            >
+              <HashIcon className="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{t("editor.toolbar.toggle-line-numbers")}</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </div>
+  );
+
+  const utilityButtons = (
+    <div className="flex items-center gap-0.5 shrink-0">
+      {utilityActions.map((action) => renderIconButton(action.label, action.label, action.icon, action.onClick))}
+    </div>
+  );
+
   return (
     <>
       <div
         className={cn(
-          // Always sticky so formatting tools stay reachable while scrolling.
           "sticky top-0 z-20 w-full",
-          // Edge-to-edge inside the padded editor card.
           "-mx-4 px-2 sm:px-3",
           "flex items-center gap-0.5 py-1.5 sm:py-2",
           "border-b border-border bg-card/95 backdrop-blur-md supports-[backdrop-filter]:bg-card/80",
-          // Horizontal scroll on narrow screens; hide scrollbar for a cleaner mobile look.
-          "overflow-x-auto overscroll-x-contain",
-          "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
         )}
         role="toolbar"
         aria-label={t("editor.toolbar.label")}
       >
         <TooltipProvider delayDuration={400}>
-          <div className="flex items-center gap-0.5 shrink-0">
-            {utilityActions.map((action) => (
-              <Tooltip key={action.label}>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className={toolbarButtonClass} onClick={action.onClick} aria-label={action.label}>
-                    <action.icon className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{action.label}</p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
+          {/* Mobile: compact primary row + overflow menu */}
+          <div className="flex sm:hidden items-center gap-0.5 w-full min-w-0">
+            {utilityButtons}
+            <div className="w-px h-5 bg-border mx-1 shrink-0" aria-hidden />
+            {mobilePrimaryActions.map((action) =>
+              renderIconButton(action.labelKey, t(action.labelKey), action.icon, () => handleInsert(action.prefix, action.suffix)),
+            )}
+
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className={toolbarButtonClass} aria-label={t("editor.toolbar.more")}>
+                  <EllipsisIcon className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52 max-h-[70vh]">
+                {mobileOverflowGroups.map((group, groupIndex) => (
+                  <div key={group.labelKey}>
+                    {groupIndex > 0 && <DropdownMenuSeparator />}
+                    <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">{t(group.labelKey)}</DropdownMenuLabel>
+                    {group.actions.map((action) => {
+                      const Icon = action.icon;
+                      return (
+                        <DropdownMenuItem
+                          key={action.labelKey}
+                          className="gap-2 cursor-pointer"
+                          onSelect={() => handleInsert(action.prefix, action.suffix)}
+                        >
+                          <Icon className="w-4 h-4 text-muted-foreground" />
+                          <span>{t(action.labelKey)}</span>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </div>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <div className="flex-1 min-w-1" />
+            {trailingActions}
           </div>
 
-          <div className="w-px h-5 bg-border mx-1 shrink-0" aria-hidden />
-
-          {actionGroups.map((group, groupIndex) => (
-            <div key={group.map((action) => action.labelKey).join("-")} className="flex items-center gap-0.5 shrink-0">
-              {group.map((action) => {
-                const label = t(action.labelKey);
-                return (
-                  <Tooltip key={action.labelKey}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={toolbarButtonClass}
-                        onClick={() => handleInsert(action.prefix, action.suffix)}
-                        aria-label={label}
-                      >
-                        <action.icon className="w-4 h-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{label}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
-              {groupIndex < actionGroups.length - 1 && <div className="w-px h-5 bg-border mx-1" aria-hidden />}
-            </div>
-          ))}
-
-          <div className="flex-1 min-w-2" />
-
-          <div className="flex items-center gap-0.5 shrink-0 pl-1">
-            {onClear && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(toolbarButtonClass, canClear && "text-destructive/80 hover:text-destructive")}
-                    onClick={() => setClearDialogOpen(true)}
-                    disabled={!canClear}
-                    aria-label={t("editor.toolbar.clear")}
-                  >
-                    <EraserIcon className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{t("editor.toolbar.clear")}</p>
-                </TooltipContent>
-              </Tooltip>
+          {/* Desktop / tablet: full horizontal toolbar */}
+          <div
+            className={cn(
+              "hidden sm:flex items-center gap-0.5 w-full min-w-0",
+              "overflow-x-auto overscroll-x-contain",
+              "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
             )}
+          >
+            {utilityButtons}
+            <div className="w-px h-5 bg-border mx-1 shrink-0" aria-hidden />
 
-            {showLineNumberToggle && toggleShowLineNumbers && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(toolbarButtonClass, showLineNumbers && "bg-muted-foreground/20 text-foreground")}
-                    onClick={toggleShowLineNumbers}
-                    aria-label={t("editor.toolbar.toggle-line-numbers")}
-                  >
-                    <HashIcon className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{t("editor.toolbar.toggle-line-numbers")}</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
+            {actionGroups.map((group, groupIndex) => (
+              <div key={group.map((action) => action.labelKey).join("-")} className="flex items-center gap-0.5 shrink-0">
+                {group.map((action) =>
+                  renderIconButton(action.labelKey, t(action.labelKey), action.icon, () => handleInsert(action.prefix, action.suffix)),
+                )}
+                {groupIndex < actionGroups.length - 1 && <div className="w-px h-5 bg-border mx-1" aria-hidden />}
+              </div>
+            ))}
+
+            <div className="flex-1 min-w-2" />
+            {trailingActions}
           </div>
         </TooltipProvider>
       </div>

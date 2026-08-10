@@ -146,13 +146,28 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   const handleClearContent = () => {
     editorRef.current?.setContent("");
     cacheService.clear(cacheService.key(currentUser?.name ?? "", cacheKey));
-    // Drop pending local uploads so "clear" fully resets the draft area.
+
+    // Fully reset draft extras: pending uploads, linked attachments, relations, location.
     if (state.localFiles.length > 0) {
       dispatch(actions.clearLocalFiles());
     }
+    if (state.metadata.attachments.length > 0 || state.metadata.relations.length > 0 || state.metadata.location) {
+      dispatch(
+        actions.setMetadata({
+          attachments: [],
+          relations: [],
+          location: undefined,
+        }),
+      );
+    }
   };
 
-  const canClear = state.content.trim().length > 0 || state.localFiles.length > 0;
+  const canClear =
+    state.content.trim().length > 0 ||
+    state.localFiles.length > 0 ||
+    state.metadata.attachments.length > 0 ||
+    state.metadata.relations.length > 0 ||
+    Boolean(state.metadata.location);
 
   return (
     <>

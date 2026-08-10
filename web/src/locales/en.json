@@ -157,7 +157,12 @@
       "paste": "Paste",
       "clear": "Clear all",
       "clear-confirm": "Clear editor content?",
-      "clear-confirm-description": "This will remove the current draft text and pending uploads. This cannot be undone.",
+      "clear-confirm-description": "This will remove the current draft text, pending uploads, attachments, linked memos, and location. This cannot be undone.",
+      "more": "More formatting",
+      "group-text": "Text & blocks",
+      "group-heading": "Headings",
+      "group-list": "Lists & table",
+      "group-math": "Math",
       "toggle-line-numbers": "Toggle line numbers"
     }
   },
