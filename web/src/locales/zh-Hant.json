@@ -332,7 +332,16 @@
       "template": "範本",
       "token-endpoint": "權杖端點（Token Endpoint）",
       "update-sso": "更新 SSO",
-      "user-endpoint": "使用者端點（User Endpoint）"
+      "user-endpoint": "使用者端點（User Endpoint）",
+      "accounts-title": "已綁定身分",
+      "accounts-description": "將 SSO 綁定到目前帳號。綁定後，用該提供者以登入會進入這個帳號。",
+      "provider": "提供者",
+      "account": "帳號",
+      "linked": "已綁定",
+      "not-linked": "未綁定",
+      "link": "綁定",
+      "unlink": "解除綁定",
+      "unlink-success": "已解除綁定 {{name}}"
     },
     "storage": "儲存空間",
     "storage-section": {

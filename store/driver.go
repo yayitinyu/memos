@@ -67,4 +67,10 @@ type Driver interface {
 	ListReactions(ctx context.Context, find *FindReaction) ([]*Reaction, error)
 	GetReaction(ctx context.Context, find *FindReaction) (*Reaction, error)
 	DeleteReaction(ctx context.Context, delete *DeleteReaction) error
+
+	// UserIdentity model related methods.
+	CreateUserIdentity(ctx context.Context, create *UserIdentity) (*UserIdentity, error)
+	CreateUserWithIdentity(ctx context.Context, createUser *User, createIdentity *UserIdentity) (*User, error)
+	ListUserIdentities(ctx context.Context, find *FindUserIdentity) ([]*UserIdentity, error)
+	DeleteUserIdentities(ctx context.Context, delete *DeleteUserIdentity) error
 }

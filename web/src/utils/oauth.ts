@@ -1,11 +1,15 @@
 const STATE_STORAGE_KEY = "oauth_state";
 const STATE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 
+export type OAuthFlowMode = "signin" | "link";
+
 interface OAuthState {
   state: string;
   identityProviderId: number;
+  flowMode: OAuthFlowMode;
   timestamp: number;
   returnUrl?: string;
+  linkingUserName?: string;
   codeVerifier?: string; // PKCE code_verifier
 }
 
@@ -41,7 +45,12 @@ function base64UrlEncode(buffer: Uint8Array): string {
 
 // Store OAuth state and PKCE parameters in sessionStorage
 // Returns both state and codeChallenge for use in authorization URL
-export async function storeOAuthState(identityProviderId: number, returnUrl?: string): Promise<{ state: string; codeChallenge: string }> {
+export async function storeOAuthState(
+  identityProviderId: number,
+  flowMode: OAuthFlowMode = "signin",
+  returnUrl?: string,
+  linkingUserName?: string,
+): Promise<{ state: string; codeChallenge: string }> {
   const state = generateSecureState();
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = await generateCodeChallenge(codeVerifier);
@@ -49,8 +58,10 @@ export async function storeOAuthState(identityProviderId: number, returnUrl?: st
   const stateData: OAuthState = {
     state,
     identityProviderId,
+    flowMode,
     timestamp: Date.now(),
     returnUrl,
+    linkingUserName,
     codeVerifier, // Store for later retrieval in callback
   };
 
@@ -66,7 +77,9 @@ export async function storeOAuthState(identityProviderId: number, returnUrl?: st
 
 // Validate and retrieve OAuth state from storage (CSRF protection)
 // Returns identityProviderId, returnUrl, and codeVerifier for PKCE
-export function validateOAuthState(stateParam: string): { identityProviderId: number; returnUrl?: string; codeVerifier?: string } | null {
+export function validateOAuthState(
+  stateParam: string,
+): { identityProviderId: number; flowMode: OAuthFlowMode; returnUrl?: string; linkingUserName?: string; codeVerifier?: string } | null {
   try {
     const storedData = sessionStorage.getItem(STATE_STORAGE_KEY);
     if (!storedData) {
@@ -94,7 +107,9 @@ export function validateOAuthState(stateParam: string): { identityProviderId: nu
     sessionStorage.removeItem(STATE_STORAGE_KEY);
     return {
       identityProviderId: stateData.identityProviderId,
+      flowMode: stateData.flowMode || "signin",
       returnUrl: stateData.returnUrl,
+      linkingUserName: stateData.linkingUserName,
       codeVerifier: stateData.codeVerifier, // Return PKCE code_verifier
     };
   } catch (error) {

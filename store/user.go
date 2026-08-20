@@ -152,6 +152,9 @@ func (s *Store) GetUser(ctx context.Context, find *FindUser) (*User, error) {
 }
 
 func (s *Store) DeleteUser(ctx context.Context, delete *DeleteUser) error {
+	if err := s.driver.DeleteUserIdentities(ctx, &DeleteUserIdentity{UserID: &delete.ID}); err != nil {
+		return err
+	}
 	err := s.driver.DeleteUser(ctx, delete)
 	if err != nil {
 		return err

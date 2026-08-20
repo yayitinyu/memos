@@ -403,7 +403,16 @@
       "template": "Template",
       "token-endpoint": "Token endpoint",
       "update-sso": "Update SSO",
-      "user-endpoint": "User endpoint"
+      "user-endpoint": "User endpoint",
+      "accounts-title": "Linked identities",
+      "accounts-description": "Link an SSO provider to this account. After linking, signing in with that provider opens this same user.",
+      "provider": "Provider",
+      "account": "Account",
+      "linked": "Linked",
+      "not-linked": "Not linked",
+      "link": "Link",
+      "unlink": "Unlink",
+      "unlink-success": "Unlinked {{name}}"
     },
     "storage": "Storage",
     "storage-section": {

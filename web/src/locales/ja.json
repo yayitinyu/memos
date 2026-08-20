@@ -314,7 +314,16 @@
       "template": "テンプレート",
       "token-endpoint": "トークンエンドポイント",
       "update-sso": "SSOを更新する",
-      "user-endpoint": "ユーザーエンドポイント"
+      "user-endpoint": "ユーザーエンドポイント",
+      "accounts-title": "連携済みの ID",
+      "accounts-description": "SSO をこのアカウントに連携します。連携後、そのプロバイダーでログインするとこのユーザーになります。",
+      "provider": "プロバイダー",
+      "account": "アカウント",
+      "linked": "連携済み",
+      "not-linked": "未連携",
+      "link": "連携",
+      "unlink": "解除",
+      "unlink-success": "{{name}} の連携を解除しました"
     },
     "storage": "ストレージ",
     "storage-section": {

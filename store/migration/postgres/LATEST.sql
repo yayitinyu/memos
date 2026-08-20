@@ -113,3 +113,17 @@ CREATE TABLE reaction (
   reaction_type TEXT NOT NULL,
   UNIQUE(creator_id, content_id, reaction_type)
 );
+
+-- user_identity
+CREATE TABLE user_identity (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  provider TEXT NOT NULL,
+  extern_uid TEXT NOT NULL,
+  created_ts BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
+  updated_ts BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
+  UNIQUE (provider, extern_uid),
+  UNIQUE (user_id, provider)
+);
+
+CREATE INDEX idx_user_identity_user_id ON user_identity(user_id);

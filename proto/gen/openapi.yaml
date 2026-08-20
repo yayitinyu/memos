@@ -1177,6 +1177,123 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/users/{user}/linkedIdentities:
+        get:
+            tags:
+                - UserService
+            description: ListLinkedIdentities returns a list of linked SSO identities for a user.
+            operationId: UserService_ListLinkedIdentities
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListLinkedIdentitiesResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        post:
+            tags:
+                - UserService
+            description: CreateLinkedIdentity links an SSO identity to the authenticated user.
+            operationId: UserService_CreateLinkedIdentity
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateLinkedIdentityRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LinkedIdentity'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/users/{user}/linkedIdentities/{linkedIdentity}:
+        get:
+            tags:
+                - UserService
+            description: GetLinkedIdentity gets a linked SSO identity for a user.
+            operationId: UserService_GetLinkedIdentity
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+                - name: linkedIdentity
+                  in: path
+                  description: The linkedIdentity id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LinkedIdentity'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - UserService
+            description: DeleteLinkedIdentity unlinks an SSO identity from a user.
+            operationId: UserService_DeleteLinkedIdentity
+            parameters:
+                - name: user
+                  in: path
+                  description: The user id.
+                  required: true
+                  schema:
+                    type: string
+                - name: linkedIdentity
+                  in: path
+                  description: The linkedIdentity id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/users/{user}/notifications:
         get:
             tags:
@@ -1928,6 +2045,29 @@ components:
                 memo:
                     type: string
                     description: "Optional. The related memo. Refer to `Memo.name`.\r\n Format: memos/{memo}"
+        CreateLinkedIdentityRequest:
+            required:
+                - parent
+                - idpName
+                - code
+                - redirectUri
+            type: object
+            properties:
+                parent:
+                    type: string
+                    description: "Required. The parent user who owns the linked identity.\r\n Format: users/{user}"
+                idpName:
+                    type: string
+                    description: "Required. The identity provider to link.\r\n Format: identity-providers/{idp}"
+                code:
+                    type: string
+                    description: Required. The authorization code from the identity provider.
+                redirectUri:
+                    type: string
+                    description: Required. The redirect URI used in the OAuth flow.
+                codeVerifier:
+                    type: string
+                    description: Optional. The PKCE code verifier used in the OAuth flow.
         CreatePersonalAccessTokenRequest:
             required:
                 - parent
@@ -2133,6 +2273,21 @@ components:
                         - $ref: '#/components/schemas/StorageSetting_S3Config'
                     description: The S3 config.
             description: Storage configuration settings for instance attachments.
+        LinkedIdentity:
+            type: object
+            properties:
+                name:
+                    type: string
+                    description: "The resource name of the linked identity.\r\n Format: users/{user}/linkedIdentities/{linked_identity}"
+                idpName:
+                    readOnly: true
+                    type: string
+                    description: "The resource name of the identity provider.\r\n Format: identity-providers/{idp}"
+                externUid:
+                    readOnly: true
+                    type: string
+                    description: The external user identifier from the identity provider.
+            description: LinkedIdentity represents an SSO identity linked to a user account.
         ListActivitiesResponse:
             type: object
             properties:
@@ -2175,6 +2330,14 @@ components:
                     items:
                         $ref: '#/components/schemas/IdentityProvider'
                     description: The list of identity providers.
+        ListLinkedIdentitiesResponse:
+            type: object
+            properties:
+                linkedIdentities:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/LinkedIdentity'
+                    description: The list of linked identities.
         ListMemoAttachmentsResponse:
             type: object
             properties:

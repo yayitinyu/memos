@@ -8,6 +8,7 @@ import UpdateAccountDialog from "../UpdateAccountDialog";
 import UserAvatar from "../UserAvatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import AccessTokenSection from "./AccessTokenSection";
+import LinkedIdentitySection from "./LinkedIdentitySection";
 import SettingGroup from "./SettingGroup";
 import SettingSection from "./SettingSection";
 import SignInSessionSection from "./SignInSessionSection";
@@ -56,6 +57,8 @@ const MyAccountSection = () => {
           </div>
         </div>
       </SettingGroup>
+
+      <LinkedIdentitySection />
 
       <SettingGroup showSeparator>
         <AccessTokenSection />

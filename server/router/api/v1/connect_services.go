@@ -151,6 +151,38 @@ func (s *ConnectServiceHandler) ListUserSettings(ctx context.Context, req *conne
 	return connect.NewResponse(resp), nil
 }
 
+func (s *ConnectServiceHandler) ListLinkedIdentities(ctx context.Context, req *connect.Request[v1pb.ListLinkedIdentitiesRequest]) (*connect.Response[v1pb.ListLinkedIdentitiesResponse], error) {
+	resp, err := s.APIV1Service.ListLinkedIdentities(ctx, req.Msg)
+	if err != nil {
+		return nil, convertGRPCError(err)
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (s *ConnectServiceHandler) CreateLinkedIdentity(ctx context.Context, req *connect.Request[v1pb.CreateLinkedIdentityRequest]) (*connect.Response[v1pb.LinkedIdentity], error) {
+	resp, err := s.APIV1Service.CreateLinkedIdentity(ctx, req.Msg)
+	if err != nil {
+		return nil, convertGRPCError(err)
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (s *ConnectServiceHandler) GetLinkedIdentity(ctx context.Context, req *connect.Request[v1pb.GetLinkedIdentityRequest]) (*connect.Response[v1pb.LinkedIdentity], error) {
+	resp, err := s.APIV1Service.GetLinkedIdentity(ctx, req.Msg)
+	if err != nil {
+		return nil, convertGRPCError(err)
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (s *ConnectServiceHandler) DeleteLinkedIdentity(ctx context.Context, req *connect.Request[v1pb.DeleteLinkedIdentityRequest]) (*connect.Response[emptypb.Empty], error) {
+	resp, err := s.APIV1Service.DeleteLinkedIdentity(ctx, req.Msg)
+	if err != nil {
+		return nil, convertGRPCError(err)
+	}
+	return connect.NewResponse(resp), nil
+}
+
 func (s *ConnectServiceHandler) ListPersonalAccessTokens(ctx context.Context, req *connect.Request[v1pb.ListPersonalAccessTokensRequest]) (*connect.Response[v1pb.ListPersonalAccessTokensResponse], error) {
 	resp, err := s.APIV1Service.ListPersonalAccessTokens(ctx, req.Msg)
 	if err != nil {

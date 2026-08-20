@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"regexp"
 	"strings"
 	"time"
 
@@ -17,8 +16,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/usememos/memos/internal/util"
-	"github.com/usememos/memos/plugin/idp"
-	"github.com/usememos/memos/plugin/idp/oauth2"
 	v1pb "github.com/usememos/memos/proto/gen/api/v1"
 	storepb "github.com/usememos/memos/proto/gen/store"
 	"github.com/usememos/memos/server/auth"
@@ -90,82 +87,13 @@ func (s *APIV1Service) SignIn(ctx context.Context, request *v1pb.SignInRequest) 
 		existingUser = user
 	} else if ssoCredentials := request.GetSsoCredentials(); ssoCredentials != nil {
 		// Authentication Method 2: SSO (OAuth2) authentication
-		identityProvider, err := s.Store.GetIdentityProvider(ctx, &store.FindIdentityProvider{
-			ID: &ssoCredentials.IdpId,
-		})
+		identityProvider, userInfo, err := s.resolveSSOIdentityByID(ctx, ssoCredentials.IdpId, ssoCredentials.Code, ssoCredentials.RedirectUri, ssoCredentials.CodeVerifier)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to get identity provider, error: %v", err)
+			return nil, err
 		}
-		if identityProvider == nil {
-			return nil, status.Errorf(codes.InvalidArgument, "identity provider not found")
-		}
-
-		var userInfo *idp.IdentityProviderUserInfo
-		if identityProvider.Type == storepb.IdentityProvider_OAUTH2 {
-			oauth2IdentityProvider, err := oauth2.NewIdentityProvider(identityProvider.Config.GetOauth2Config())
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "failed to create oauth2 identity provider, error: %v", err)
-			}
-			// Pass code_verifier for PKCE support (empty string if not provided for backward compatibility)
-			token, err := oauth2IdentityProvider.ExchangeToken(ctx, ssoCredentials.RedirectUri, ssoCredentials.Code, ssoCredentials.CodeVerifier)
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "failed to exchange token, error: %v", err)
-			}
-			userInfo, err = oauth2IdentityProvider.UserInfo(token)
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "failed to get user info, error: %v", err)
-			}
-		}
-
-		identifierFilter := identityProvider.IdentifierFilter
-		if identifierFilter != "" {
-			identifierFilterRegex, err := regexp.Compile(identifierFilter)
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "failed to compile identifier filter regex, error: %v", err)
-			}
-			if !identifierFilterRegex.MatchString(userInfo.Identifier) {
-				return nil, status.Errorf(codes.PermissionDenied, "identifier %s is not allowed", userInfo.Identifier)
-			}
-		}
-
-		user, err := s.Store.GetUser(ctx, &store.FindUser{
-			Username: &userInfo.Identifier,
-		})
+		user, err := s.resolveSSOUser(ctx, nil, identityProvider, userInfo)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to get user, error: %v", err)
-		}
-		if user == nil {
-			// Check if the user is allowed to sign up.
-			instanceGeneralSetting, err := s.Store.GetInstanceGeneralSetting(ctx)
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "failed to get instance general setting, error: %v", err)
-			}
-			if instanceGeneralSetting.DisallowUserRegistration {
-				return nil, status.Errorf(codes.PermissionDenied, "user registration is not allowed")
-			}
-
-			// Create a new user with the user info from the identity provider.
-			userCreate := &store.User{
-				Username: userInfo.Identifier,
-				// The new signup user should be normal user by default.
-				Role:      store.RoleUser,
-				Nickname:  userInfo.DisplayName,
-				Email:     userInfo.Email,
-				AvatarURL: userInfo.AvatarURL,
-			}
-			password, err := util.RandomString(20)
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "failed to generate random password, error: %v", err)
-			}
-			passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "failed to generate password hash, error: %v", err)
-			}
-			userCreate.PasswordHash = string(passwordHash)
-			user, err = s.Store.CreateUser(ctx, userCreate)
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "failed to create user, error: %v", err)
-			}
+			return nil, err
 		}
 		existingUser = user
 	}

@@ -403,7 +403,16 @@
       "template": "模板",
       "token-endpoint": "令牌端点（Token Endpoint）",
       "update-sso": "更新单点登录",
-      "user-endpoint": "用户端点（User Endpoint）"
+      "user-endpoint": "用户端点（User Endpoint）",
+      "accounts-title": "已绑定身份",
+      "accounts-description": "将 SSO 绑定到当前账号。绑定后，用该提供商登录会进入这个账号。",
+      "provider": "提供商",
+      "account": "账号",
+      "linked": "已绑定",
+      "not-linked": "未绑定",
+      "link": "绑定",
+      "unlink": "解绑",
+      "unlink-success": "已解绑 {{name}}"
     },
     "storage": "存储",
     "storage-section": {

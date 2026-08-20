@@ -51,7 +51,7 @@ const SignIn = () => {
         // Generate and store secure state parameter with CSRF protection
         // Also generate PKCE parameters (code_challenge) for enhanced security
         const identityProviderId = extractIdentityProviderIdFromName(identityProvider.name);
-        const { state, codeChallenge } = await storeOAuthState(identityProviderId);
+        const { state, codeChallenge } = await storeOAuthState(identityProviderId, "signin");
 
         // Build OAuth authorization URL with secure state and PKCE
         // Using S256 (SHA-256) as the code_challenge_method per RFC 7636
