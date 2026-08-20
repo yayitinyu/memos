@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -160,6 +161,9 @@ func convertIdentityProviderToRaw(identityProvider *storepb.IdentityProvider) (*
 func convertIdentityProviderConfigFromRaw(identityProviderType storepb.IdentityProvider_Type, raw string) (*storepb.IdentityProviderConfig, error) {
 	config := &storepb.IdentityProviderConfig{}
 	if identityProviderType == storepb.IdentityProvider_OAUTH2 {
+		if strings.TrimSpace(raw) == "" {
+			raw = "{}"
+		}
 		oauth2Config := &storepb.OAuth2Config{}
 		if err := protojsonUnmarshaler.Unmarshal([]byte(raw), oauth2Config); err != nil {
 			return nil, errors.Wrap(err, "Failed to unmarshal OAuth2Config")
@@ -170,13 +174,13 @@ func convertIdentityProviderConfigFromRaw(identityProviderType storepb.IdentityP
 }
 
 func convertIdentityProviderConfigToRaw(identityProviderType storepb.IdentityProvider_Type, config *storepb.IdentityProviderConfig) (string, error) {
-	raw := ""
-	if identityProviderType == storepb.IdentityProvider_OAUTH2 {
+	if identityProviderType == storepb.IdentityProvider_OAUTH2 && config != nil && config.GetOauth2Config() != nil {
 		bytes, err := protojson.Marshal(config.GetOauth2Config())
 		if err != nil {
 			return "", errors.Wrap(err, "Failed to marshal OAuth2Config")
 		}
-		raw = string(bytes)
+		return string(bytes), nil
 	}
-	return raw, nil
+	// PostgreSQL stores config as JSONB; an empty string is invalid JSON.
+	return "{}", nil
 }

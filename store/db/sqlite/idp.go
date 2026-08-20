@@ -2,7 +2,6 @@ package sqlite
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	storepb "github.com/usememos/memos/proto/gen/store"
@@ -26,7 +25,7 @@ func (d *DB) CreateIdentityProvider(ctx context.Context, create *store.IdentityP
 func (d *DB) ListIdentityProviders(ctx context.Context, find *store.FindIdentityProvider) ([]*store.IdentityProvider, error) {
 	where, args := []string{"1 = 1"}, []any{}
 	if v := find.ID; v != nil {
-		where, args = append(where, fmt.Sprintf("id = $%d", len(args)+1)), append(args, *v)
+		where, args = append(where, "id = ?"), append(args, *v)
 	}
 
 	rows, err := d.db.QueryContext(ctx, `

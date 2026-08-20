@@ -36,6 +36,7 @@ func TestIdentityProviderStore(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
+	require.NotZero(t, createdIDP.Id)
 	idp, err := ts.GetIdentityProvider(ctx, &store.FindIdentityProvider{
 		ID: &createdIDP.Id,
 	})

@@ -2,21 +2,27 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"strings"
+	"time"
 
 	"github.com/usememos/memos/store"
 )
 
 func (d *DB) UpsertReaction(ctx context.Context, upsert *store.Reaction) (*store.Reaction, error) {
-	fields := []string{"creator_id", "content_id", "reaction_type"}
-	args := []interface{}{upsert.CreatorID, upsert.ContentID, upsert.ReactionType}
-	stmt := "INSERT INTO reaction (" + strings.Join(fields, ", ") + ") VALUES (" + placeholders(len(args)) + ") RETURNING id, created_ts"
+	now := time.Now().Unix()
+	idCol, idVal := d.serialInsertPrefix(ctx, "reaction")
+	fields := []string{"creator_id", "content_id", "reaction_type", "created_ts"}
+	args := []interface{}{upsert.CreatorID, upsert.ContentID, upsert.ReactionType, now}
+	stmt := "INSERT INTO reaction (" + idCol + strings.Join(fields, ", ") + ") VALUES (" + idVal + placeholders(len(args)) + ") RETURNING id, created_ts"
+	var createdTs sql.NullInt64
 	if err := d.db.QueryRowContext(ctx, stmt, args...).Scan(
 		&upsert.ID,
-		&upsert.CreatedTs,
+		&createdTs,
 	); err != nil {
 		return nil, err
 	}
+	upsert.CreatedTs = unixTs(createdTs)
 
 	reaction := upsert
 	return reaction, nil
@@ -63,15 +69,17 @@ func (d *DB) ListReactions(ctx context.Context, find *store.FindReaction) ([]*st
 	list := []*store.Reaction{}
 	for rows.Next() {
 		reaction := &store.Reaction{}
+		var createdTs sql.NullInt64
 		if err := rows.Scan(
 			&reaction.ID,
-			&reaction.CreatedTs,
+			&createdTs,
 			&reaction.CreatorID,
 			&reaction.ContentID,
 			&reaction.ReactionType,
 		); err != nil {
 			return nil, err
 		}
+		reaction.CreatedTs = unixTs(createdTs)
 		list = append(list, reaction)
 	}
 

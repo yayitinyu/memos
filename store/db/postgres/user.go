@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -11,18 +12,21 @@ import (
 )
 
 func (d *DB) CreateUser(ctx context.Context, create *store.User) (*store.User, error) {
+	idCol, idVal := d.serialInsertPrefix(ctx, "user")
 	fields := []string{"username", "role", "email", "nickname", "password_hash", "avatar_url"}
 	args := []any{create.Username, create.Role, create.Email, create.Nickname, create.PasswordHash, create.AvatarURL}
-	stmt := "INSERT INTO \"user\" (" + strings.Join(fields, ", ") + ") VALUES (" + placeholders(len(args)) + ") RETURNING id, description, created_ts, updated_ts, row_status"
+	stmt := "INSERT INTO \"user\" (" + idCol + strings.Join(fields, ", ") + ") VALUES (" + idVal + placeholders(len(args)) + ") RETURNING id, description, created_ts, updated_ts, row_status"
+	var createdTs, updatedTs sql.NullInt64
 	if err := d.db.QueryRowContext(ctx, stmt, args...).Scan(
 		&create.ID,
 		&create.Description,
-		&create.CreatedTs,
-		&create.UpdatedTs,
+		&createdTs,
+		&updatedTs,
 		&create.RowStatus,
 	); err != nil {
 		return nil, err
 	}
+	create.CreatedTs, create.UpdatedTs = unixTs(createdTs), unixTs(updatedTs)
 
 	return create, nil
 }
@@ -65,6 +69,7 @@ func (d *DB) UpdateUser(ctx context.Context, update *store.UpdateUser) (*store.U
 	`
 	args = append(args, update.ID)
 	user := &store.User{}
+	var createdTs, updatedTs sql.NullInt64
 	if err := d.db.QueryRowContext(ctx, query, args...).Scan(
 		&user.ID,
 		&user.Username,
@@ -74,12 +79,13 @@ func (d *DB) UpdateUser(ctx context.Context, update *store.UpdateUser) (*store.U
 		&user.PasswordHash,
 		&user.AvatarURL,
 		&user.Description,
-		&user.CreatedTs,
-		&user.UpdatedTs,
+		&createdTs,
+		&updatedTs,
 		&user.RowStatus,
 	); err != nil {
 		return nil, err
 	}
+	user.CreatedTs, user.UpdatedTs = unixTs(createdTs), unixTs(updatedTs)
 
 	return user, nil
 }
@@ -135,6 +141,7 @@ func (d *DB) ListUsers(ctx context.Context, find *store.FindUser) ([]*store.User
 	list := make([]*store.User, 0)
 	for rows.Next() {
 		var user store.User
+		var createdTs, updatedTs sql.NullInt64
 		if err := rows.Scan(
 			&user.ID,
 			&user.Username,
@@ -144,12 +151,13 @@ func (d *DB) ListUsers(ctx context.Context, find *store.FindUser) ([]*store.User
 			&user.PasswordHash,
 			&user.AvatarURL,
 			&user.Description,
-			&user.CreatedTs,
-			&user.UpdatedTs,
+			&createdTs,
+			&updatedTs,
 			&user.RowStatus,
 		); err != nil {
 			return nil, err
 		}
+		user.CreatedTs, user.UpdatedTs = unixTs(createdTs), unixTs(updatedTs)
 		list = append(list, &user)
 	}
 

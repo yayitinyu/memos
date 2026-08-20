@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -14,7 +15,9 @@ import (
 )
 
 func (d *DB) CreateAttachment(ctx context.Context, create *store.Attachment) (*store.Attachment, error) {
-	fields := []string{"uid", "filename", "blob", "type", "size", "creator_id", "memo_id", "storage_type", "reference", "payload"}
+	now := time.Now().Unix()
+	idCol, idVal := d.serialInsertPrefix(ctx, "resource")
+	fields := []string{"uid", "filename", "blob", "type", "size", "creator_id", "memo_id", "storage_type", "reference", "payload", "created_ts", "updated_ts"}
 	storageType := ""
 	if create.StorageType != storepb.AttachmentStorageType_ATTACHMENT_STORAGE_TYPE_UNSPECIFIED {
 		storageType = create.StorageType.String()
@@ -27,12 +30,14 @@ func (d *DB) CreateAttachment(ctx context.Context, create *store.Attachment) (*s
 		}
 		payloadString = string(bytes)
 	}
-	args := []any{create.UID, create.Filename, create.Blob, create.Type, create.Size, create.CreatorID, create.MemoID, storageType, create.Reference, payloadString}
+	args := []any{create.UID, create.Filename, create.Blob, create.Type, create.Size, create.CreatorID, create.MemoID, storageType, create.Reference, payloadString, now, now}
 
-	stmt := "INSERT INTO resource (" + strings.Join(fields, ", ") + ") VALUES (" + placeholders(len(args)) + ") RETURNING id, created_ts, updated_ts"
-	if err := d.db.QueryRowContext(ctx, stmt, args...).Scan(&create.ID, &create.CreatedTs, &create.UpdatedTs); err != nil {
+	stmt := "INSERT INTO resource (" + idCol + strings.Join(fields, ", ") + ") VALUES (" + idVal + placeholders(len(args)) + ") RETURNING id, created_ts, updated_ts"
+	var createdTs, updatedTs sql.NullInt64
+	if err := d.db.QueryRowContext(ctx, stmt, args...).Scan(&create.ID, &createdTs, &updatedTs); err != nil {
 		return nil, err
 	}
+	create.CreatedTs, create.UpdatedTs = unixTs(createdTs), unixTs(updatedTs)
 	return create, nil
 }
 
@@ -118,6 +123,7 @@ func (d *DB) ListAttachments(ctx context.Context, find *store.FindAttachment) ([
 		var memoID sql.NullInt32
 		var storageType string
 		var payloadBytes []byte
+		var createdTs, updatedTs sql.NullInt64
 		dests := []any{
 			&attachment.ID,
 			&attachment.UID,
@@ -125,8 +131,8 @@ func (d *DB) ListAttachments(ctx context.Context, find *store.FindAttachment) ([
 			&attachment.Type,
 			&attachment.Size,
 			&attachment.CreatorID,
-			&attachment.CreatedTs,
-			&attachment.UpdatedTs,
+			&createdTs,
+			&updatedTs,
 			&memoID,
 			&storageType,
 			&attachment.Reference,
@@ -140,6 +146,7 @@ func (d *DB) ListAttachments(ctx context.Context, find *store.FindAttachment) ([
 			return nil, err
 		}
 
+		attachment.CreatedTs, attachment.UpdatedTs = unixTs(createdTs), unixTs(updatedTs)
 		if memoID.Valid {
 			attachment.MemoID = &memoID.Int32
 		}

@@ -9,9 +9,14 @@ import (
 )
 
 func (d *DB) CreateIdentityProvider(ctx context.Context, create *store.IdentityProvider) (*store.IdentityProvider, error) {
+	config := create.Config
+	if strings.TrimSpace(config) == "" {
+		config = "{}"
+	}
+	idCol, idVal := d.serialInsertPrefix(ctx, "idp")
 	fields := []string{"name", "type", "identifier_filter", "config"}
-	args := []any{create.Name, create.Type.String(), create.IdentifierFilter, create.Config}
-	stmt := "INSERT INTO idp (" + strings.Join(fields, ", ") + ") VALUES (" + placeholders(len(args)) + ") RETURNING id"
+	args := []any{create.Name, create.Type.String(), create.IdentifierFilter, config}
+	stmt := "INSERT INTO idp (" + idCol + strings.Join(fields, ", ") + ") VALUES (" + idVal + placeholders(len(args)) + ") RETURNING id"
 	if err := d.db.QueryRowContext(ctx, stmt, args...).Scan(&create.ID); err != nil {
 		return nil, err
 	}

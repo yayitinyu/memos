@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"sync"
 
 	// Import the PostgreSQL driver.
 	_ "github.com/lib/pq"
@@ -14,8 +15,9 @@ import (
 )
 
 type DB struct {
-	db      *sql.DB
-	profile *profile.Profile
+	db         *sql.DB
+	profile    *profile.Profile
+	serialOnce sync.Map // map[string]*serialResult
 }
 
 func NewDB(profile *profile.Profile) (store.Driver, error) {

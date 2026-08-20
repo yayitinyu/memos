@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -22,15 +24,19 @@ func (d *DB) CreateInbox(ctx context.Context, create *store.Inbox) (*store.Inbox
 		messageString = string(bytes)
 	}
 
-	fields := []string{"sender_id", "receiver_id", "status", "message"}
-	args := []any{create.SenderID, create.ReceiverID, create.Status, messageString}
-	stmt := "INSERT INTO inbox (" + strings.Join(fields, ", ") + ") VALUES (" + placeholders(len(args)) + ") RETURNING id, created_ts"
+	now := time.Now().Unix()
+	idCol, idVal := d.serialInsertPrefix(ctx, "inbox")
+	fields := []string{"sender_id", "receiver_id", "status", "message", "created_ts"}
+	args := []any{create.SenderID, create.ReceiverID, create.Status, messageString, now}
+	stmt := "INSERT INTO inbox (" + idCol + strings.Join(fields, ", ") + ") VALUES (" + idVal + placeholders(len(args)) + ") RETURNING id, created_ts"
+	var createdTs sql.NullInt64
 	if err := d.db.QueryRowContext(ctx, stmt, args...).Scan(
 		&create.ID,
-		&create.CreatedTs,
+		&createdTs,
 	); err != nil {
 		return nil, err
 	}
+	create.CreatedTs = unixTs(createdTs)
 
 	return create, nil
 }
@@ -73,9 +79,10 @@ func (d *DB) ListInboxes(ctx context.Context, find *store.FindInbox) ([]*store.I
 	for rows.Next() {
 		inbox := &store.Inbox{}
 		var messageBytes []byte
+		var createdTs sql.NullInt64
 		if err := rows.Scan(
 			&inbox.ID,
-			&inbox.CreatedTs,
+			&createdTs,
 			&inbox.SenderID,
 			&inbox.ReceiverID,
 			&inbox.Status,
@@ -83,6 +90,7 @@ func (d *DB) ListInboxes(ctx context.Context, find *store.FindInbox) ([]*store.I
 		); err != nil {
 			return nil, err
 		}
+		inbox.CreatedTs = unixTs(createdTs)
 
 		message := &storepb.InboxMessage{}
 		if err := protojsonUnmarshaler.Unmarshal(messageBytes, message); err != nil {
@@ -116,9 +124,10 @@ func (d *DB) UpdateInbox(ctx context.Context, update *store.UpdateInbox) (*store
 	query := "UPDATE inbox SET " + strings.Join(set, ", ") + " WHERE id = $2 RETURNING id, created_ts, sender_id, receiver_id, status, message"
 	inbox := &store.Inbox{}
 	var messageBytes []byte
+	var createdTs sql.NullInt64
 	if err := d.db.QueryRowContext(ctx, query, args...).Scan(
 		&inbox.ID,
-		&inbox.CreatedTs,
+		&createdTs,
 		&inbox.SenderID,
 		&inbox.ReceiverID,
 		&inbox.Status,
@@ -126,6 +135,7 @@ func (d *DB) UpdateInbox(ctx context.Context, update *store.UpdateInbox) (*store
 	); err != nil {
 		return nil, err
 	}
+	inbox.CreatedTs = unixTs(createdTs)
 	message := &storepb.InboxMessage{}
 	if err := protojsonUnmarshaler.Unmarshal(messageBytes, message); err != nil {
 		return nil, err

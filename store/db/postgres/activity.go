@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -21,15 +23,19 @@ func (d *DB) CreateActivity(ctx context.Context, create *store.Activity) (*store
 		payloadString = string(bytes)
 	}
 
-	fields := []string{"creator_id", "type", "level", "payload"}
-	args := []any{create.CreatorID, create.Type.String(), create.Level.String(), payloadString}
-	stmt := "INSERT INTO activity (" + strings.Join(fields, ", ") + ") VALUES (" + placeholders(len(args)) + ") RETURNING id, created_ts"
+	now := time.Now().Unix()
+	idCol, idVal := d.serialInsertPrefix(ctx, "activity")
+	fields := []string{"creator_id", "type", "level", "payload", "created_ts"}
+	args := []any{create.CreatorID, create.Type.String(), create.Level.String(), payloadString, now}
+	stmt := "INSERT INTO activity (" + idCol + strings.Join(fields, ", ") + ") VALUES (" + idVal + placeholders(len(args)) + ") RETURNING id, created_ts"
+	var createdTs sql.NullInt64
 	if err := d.db.QueryRowContext(ctx, stmt, args...).Scan(
 		&create.ID,
-		&create.CreatedTs,
+		&createdTs,
 	); err != nil {
 		return nil, err
 	}
+	create.CreatedTs = unixTs(createdTs)
 
 	return create, nil
 }
@@ -54,16 +60,18 @@ func (d *DB) ListActivities(ctx context.Context, find *store.FindActivity) ([]*s
 	for rows.Next() {
 		activity := &store.Activity{}
 		var payloadBytes []byte
+		var createdTs sql.NullInt64
 		if err := rows.Scan(
 			&activity.ID,
 			&activity.CreatorID,
 			&activity.Type,
 			&activity.Level,
 			&payloadBytes,
-			&activity.CreatedTs,
+			&createdTs,
 		); err != nil {
 			return nil, err
 		}
+		activity.CreatedTs = unixTs(createdTs)
 
 		payload := &storepb.ActivityPayload{}
 		if err := protojsonUnmarshaler.Unmarshal(payloadBytes, payload); err != nil {

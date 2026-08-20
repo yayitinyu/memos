@@ -17,6 +17,7 @@ import (
 
 func (d *DB) CreateMemo(ctx context.Context, create *store.Memo) (*store.Memo, error) {
 	now := time.Now().Unix()
+	idCol, idVal := d.serialInsertPrefix(ctx, "memo")
 	fields := []string{"uid", "creator_id", "content", "visibility", "payload", "created_ts", "updated_ts"}
 	payload := "{}"
 	if create.Payload != nil {
@@ -28,7 +29,7 @@ func (d *DB) CreateMemo(ctx context.Context, create *store.Memo) (*store.Memo, e
 	}
 	args := []any{create.UID, create.CreatorID, create.Content, create.Visibility, payload, now, now}
 
-	stmt := "INSERT INTO memo (" + strings.Join(fields, ", ") + ") VALUES (" + placeholders(len(args)) + ") RETURNING id, created_ts, updated_ts, row_status"
+	stmt := "INSERT INTO memo (" + idCol + strings.Join(fields, ", ") + ") VALUES (" + idVal + placeholders(len(args)) + ") RETURNING id, created_ts, updated_ts, row_status"
 	var createdTs, updatedTs sql.NullInt64
 	if err := d.db.QueryRowContext(ctx, stmt, args...).Scan(
 		&create.ID,
