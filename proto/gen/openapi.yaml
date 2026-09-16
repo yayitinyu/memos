@@ -2114,6 +2114,22 @@ components:
                 logoUrl:
                     type: string
             description: Custom profile configuration for instance branding.
+        GeneralSetting_LegalNotice:
+            type: object
+            properties:
+                displayIcpFiling:
+                    type: boolean
+                icpFilingNumber:
+                    type: string
+                icpFilingUrl:
+                    type: string
+                displayPublicSecurityFiling:
+                    type: boolean
+                publicSecurityFilingNumber:
+                    type: string
+                publicSecurityFilingUrl:
+                    type: string
+            description: Legal notice configuration for the public footer.
         GetCurrentUserResponse:
             type: object
             properties:
@@ -2219,6 +2235,10 @@ components:
                 disallowChangeNickname:
                     type: boolean
                     description: disallow_change_nickname disallows changing nickname.
+                legalNotice:
+                    allOf:
+                        - $ref: '#/components/schemas/GeneralSetting_LegalNotice'
+                    description: legal_notice configures filing information displayed to signed-out visitors.
             description: General instance settings configuration.
         InstanceSetting_MemoRelatedSetting:
             type: object

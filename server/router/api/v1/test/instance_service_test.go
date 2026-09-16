@@ -204,3 +204,40 @@ func TestGetInstanceSetting(t *testing.T) {
 		require.Contains(t, err.Error(), "invalid instance setting name")
 	})
 }
+
+func TestUpdateInstanceSetting_LegalNotice(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	hostUser, err := ts.CreateHostUser(ctx, "testhost")
+	require.NoError(t, err)
+	userCtx := ts.CreateUserContext(ctx, hostUser.ID)
+
+	legalNotice := &v1pb.InstanceSetting_GeneralSetting_LegalNotice{
+		DisplayIcpFiling:            true,
+		IcpFilingNumber:             "京ICP备12345678号",
+		IcpFilingUrl:                "https://beian.miit.gov.cn/",
+		DisplayPublicSecurityFiling: true,
+		PublicSecurityFilingNumber:  "京公网安备 11010502000000号",
+		PublicSecurityFilingUrl:     "https://www.beian.gov.cn/",
+	}
+	updated, err := ts.Service.UpdateInstanceSetting(userCtx, &v1pb.UpdateInstanceSettingRequest{
+		Setting: &v1pb.InstanceSetting{
+			Name: "instance/settings/GENERAL",
+			Value: &v1pb.InstanceSetting_GeneralSetting_{
+				GeneralSetting: &v1pb.InstanceSetting_GeneralSetting{
+					LegalNotice: legalNotice,
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+	require.Equal(t, legalNotice, updated.GetGeneralSetting().GetLegalNotice())
+
+	fetched, err := ts.Service.GetInstanceSetting(ctx, &v1pb.GetInstanceSettingRequest{
+		Name: "instance/settings/GENERAL",
+	})
+	require.NoError(t, err)
+	require.Equal(t, legalNotice, fetched.GetGeneralSetting().GetLegalNotice())
+}

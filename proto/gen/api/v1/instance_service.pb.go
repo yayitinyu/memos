@@ -478,8 +478,10 @@ type InstanceSetting_GeneralSetting struct {
 	DisallowChangeUsername bool `protobuf:"varint,8,opt,name=disallow_change_username,json=disallowChangeUsername,proto3" json:"disallow_change_username,omitempty"`
 	// disallow_change_nickname disallows changing nickname.
 	DisallowChangeNickname bool `protobuf:"varint,9,opt,name=disallow_change_nickname,json=disallowChangeNickname,proto3" json:"disallow_change_nickname,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	// legal_notice configures filing information displayed to signed-out visitors.
+	LegalNotice   *InstanceSetting_GeneralSetting_LegalNotice `protobuf:"bytes,10,opt,name=legal_notice,json=legalNotice,proto3" json:"legal_notice,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *InstanceSetting_GeneralSetting) Reset() {
@@ -566,6 +568,13 @@ func (x *InstanceSetting_GeneralSetting) GetDisallowChangeNickname() bool {
 		return x.DisallowChangeNickname
 	}
 	return false
+}
+
+func (x *InstanceSetting_GeneralSetting) GetLegalNotice() *InstanceSetting_GeneralSetting_LegalNotice {
+	if x != nil {
+		return x.LegalNotice
+	}
+	return nil
 }
 
 // Storage configuration settings for instance attachments.
@@ -803,6 +812,91 @@ func (x *InstanceSetting_GeneralSetting_CustomProfile) GetLogoUrl() string {
 	return ""
 }
 
+// Legal notice configuration for the public footer.
+type InstanceSetting_GeneralSetting_LegalNotice struct {
+	state                       protoimpl.MessageState `protogen:"open.v1"`
+	DisplayIcpFiling            bool                   `protobuf:"varint,1,opt,name=display_icp_filing,json=displayIcpFiling,proto3" json:"display_icp_filing,omitempty"`
+	IcpFilingNumber             string                 `protobuf:"bytes,2,opt,name=icp_filing_number,json=icpFilingNumber,proto3" json:"icp_filing_number,omitempty"`
+	IcpFilingUrl                string                 `protobuf:"bytes,3,opt,name=icp_filing_url,json=icpFilingUrl,proto3" json:"icp_filing_url,omitempty"`
+	DisplayPublicSecurityFiling bool                   `protobuf:"varint,4,opt,name=display_public_security_filing,json=displayPublicSecurityFiling,proto3" json:"display_public_security_filing,omitempty"`
+	PublicSecurityFilingNumber  string                 `protobuf:"bytes,5,opt,name=public_security_filing_number,json=publicSecurityFilingNumber,proto3" json:"public_security_filing_number,omitempty"`
+	PublicSecurityFilingUrl     string                 `protobuf:"bytes,6,opt,name=public_security_filing_url,json=publicSecurityFilingUrl,proto3" json:"public_security_filing_url,omitempty"`
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
+}
+
+func (x *InstanceSetting_GeneralSetting_LegalNotice) Reset() {
+	*x = InstanceSetting_GeneralSetting_LegalNotice{}
+	mi := &file_api_v1_instance_service_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InstanceSetting_GeneralSetting_LegalNotice) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InstanceSetting_GeneralSetting_LegalNotice) ProtoMessage() {}
+
+func (x *InstanceSetting_GeneralSetting_LegalNotice) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_instance_service_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InstanceSetting_GeneralSetting_LegalNotice.ProtoReflect.Descriptor instead.
+func (*InstanceSetting_GeneralSetting_LegalNotice) Descriptor() ([]byte, []int) {
+	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{2, 0, 1}
+}
+
+func (x *InstanceSetting_GeneralSetting_LegalNotice) GetDisplayIcpFiling() bool {
+	if x != nil {
+		return x.DisplayIcpFiling
+	}
+	return false
+}
+
+func (x *InstanceSetting_GeneralSetting_LegalNotice) GetIcpFilingNumber() string {
+	if x != nil {
+		return x.IcpFilingNumber
+	}
+	return ""
+}
+
+func (x *InstanceSetting_GeneralSetting_LegalNotice) GetIcpFilingUrl() string {
+	if x != nil {
+		return x.IcpFilingUrl
+	}
+	return ""
+}
+
+func (x *InstanceSetting_GeneralSetting_LegalNotice) GetDisplayPublicSecurityFiling() bool {
+	if x != nil {
+		return x.DisplayPublicSecurityFiling
+	}
+	return false
+}
+
+func (x *InstanceSetting_GeneralSetting_LegalNotice) GetPublicSecurityFilingNumber() string {
+	if x != nil {
+		return x.PublicSecurityFilingNumber
+	}
+	return ""
+}
+
+func (x *InstanceSetting_GeneralSetting_LegalNotice) GetPublicSecurityFilingUrl() string {
+	if x != nil {
+		return x.PublicSecurityFilingUrl
+	}
+	return ""
+}
+
 // S3 configuration for cloud storage backend.
 // Reference: https://developers.cloudflare.com/r2/examples/aws/aws-sdk-go/
 type InstanceSetting_StorageSetting_S3Config struct {
@@ -819,7 +913,7 @@ type InstanceSetting_StorageSetting_S3Config struct {
 
 func (x *InstanceSetting_StorageSetting_S3Config) Reset() {
 	*x = InstanceSetting_StorageSetting_S3Config{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[9]
+	mi := &file_api_v1_instance_service_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -831,7 +925,7 @@ func (x *InstanceSetting_StorageSetting_S3Config) String() string {
 func (*InstanceSetting_StorageSetting_S3Config) ProtoMessage() {}
 
 func (x *InstanceSetting_StorageSetting_S3Config) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[9]
+	mi := &file_api_v1_instance_service_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -899,12 +993,12 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\aversion\x18\x02 \x01(\tR\aversion\x12\x12\n" +
 	"\x04mode\x18\x03 \x01(\tR\x04mode\x12!\n" +
 	"\finstance_url\x18\x06 \x01(\tR\vinstanceUrl\"\x1b\n" +
-	"\x19GetInstanceProfileRequest\"\xef\x0f\n" +
+	"\x19GetInstanceProfileRequest\"\xa1\x13\n" +
 	"\x0fInstanceSetting\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12W\n" +
 	"\x0fgeneral_setting\x18\x02 \x01(\v2,.memos.api.v1.InstanceSetting.GeneralSettingH\x00R\x0egeneralSetting\x12W\n" +
 	"\x0fstorage_setting\x18\x03 \x01(\v2,.memos.api.v1.InstanceSetting.StorageSettingH\x00R\x0estorageSetting\x12d\n" +
-	"\x14memo_related_setting\x18\x04 \x01(\v20.memos.api.v1.InstanceSetting.MemoRelatedSettingH\x00R\x12memoRelatedSetting\x1a\xca\x04\n" +
+	"\x14memo_related_setting\x18\x04 \x01(\v20.memos.api.v1.InstanceSetting.MemoRelatedSettingH\x00R\x12memoRelatedSetting\x1a\xfc\a\n" +
 	"\x0eGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -913,11 +1007,20 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x0ecustom_profile\x18\x06 \x01(\v2:.memos.api.v1.InstanceSetting.GeneralSetting.CustomProfileR\rcustomProfile\x121\n" +
 	"\x15week_start_day_offset\x18\a \x01(\x05R\x12weekStartDayOffset\x128\n" +
 	"\x18disallow_change_username\x18\b \x01(\bR\x16disallowChangeUsername\x128\n" +
-	"\x18disallow_change_nickname\x18\t \x01(\bR\x16disallowChangeNickname\x1ab\n" +
+	"\x18disallow_change_nickname\x18\t \x01(\bR\x16disallowChangeNickname\x12[\n" +
+	"\flegal_notice\x18\n" +
+	" \x01(\v28.memos.api.v1.InstanceSetting.GeneralSetting.LegalNoticeR\vlegalNotice\x1ab\n" +
 	"\rCustomProfile\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x19\n" +
-	"\blogo_url\x18\x03 \x01(\tR\alogoUrl\x1a\xbc\x04\n" +
+	"\blogo_url\x18\x03 \x01(\tR\alogoUrl\x1a\xd2\x02\n" +
+	"\vLegalNotice\x12,\n" +
+	"\x12display_icp_filing\x18\x01 \x01(\bR\x10displayIcpFiling\x12*\n" +
+	"\x11icp_filing_number\x18\x02 \x01(\tR\x0ficpFilingNumber\x12$\n" +
+	"\x0eicp_filing_url\x18\x03 \x01(\tR\ficpFilingUrl\x12C\n" +
+	"\x1edisplay_public_security_filing\x18\x04 \x01(\bR\x1bdisplayPublicSecurityFiling\x12A\n" +
+	"\x1dpublic_security_filing_number\x18\x05 \x01(\tR\x1apublicSecurityFilingNumber\x12;\n" +
+	"\x1apublic_security_filing_url\x18\x06 \x01(\tR\x17publicSecurityFilingUrl\x1a\xbc\x04\n" +
 	"\x0eStorageSetting\x12[\n" +
 	"\fstorage_type\x18\x01 \x01(\x0e28.memos.api.v1.InstanceSetting.StorageSetting.StorageTypeR\vstorageType\x12+\n" +
 	"\x11filepath_template\x18\x02 \x01(\tR\x10filepathTemplate\x12/\n" +
@@ -977,7 +1080,7 @@ func file_api_v1_instance_service_proto_rawDescGZIP() []byte {
 }
 
 var file_api_v1_instance_service_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_api_v1_instance_service_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_api_v1_instance_service_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_api_v1_instance_service_proto_goTypes = []any{
 	(InstanceSetting_Key)(0),                             // 0: memos.api.v1.InstanceSetting.Key
 	(InstanceSetting_StorageSetting_StorageType)(0),      // 1: memos.api.v1.InstanceSetting.StorageSetting.StorageType
@@ -990,29 +1093,31 @@ var file_api_v1_instance_service_proto_goTypes = []any{
 	(*InstanceSetting_StorageSetting)(nil),               // 8: memos.api.v1.InstanceSetting.StorageSetting
 	(*InstanceSetting_MemoRelatedSetting)(nil),           // 9: memos.api.v1.InstanceSetting.MemoRelatedSetting
 	(*InstanceSetting_GeneralSetting_CustomProfile)(nil), // 10: memos.api.v1.InstanceSetting.GeneralSetting.CustomProfile
-	(*InstanceSetting_StorageSetting_S3Config)(nil),      // 11: memos.api.v1.InstanceSetting.StorageSetting.S3Config
-	(*fieldmaskpb.FieldMask)(nil),                        // 12: google.protobuf.FieldMask
+	(*InstanceSetting_GeneralSetting_LegalNotice)(nil),   // 11: memos.api.v1.InstanceSetting.GeneralSetting.LegalNotice
+	(*InstanceSetting_StorageSetting_S3Config)(nil),      // 12: memos.api.v1.InstanceSetting.StorageSetting.S3Config
+	(*fieldmaskpb.FieldMask)(nil),                        // 13: google.protobuf.FieldMask
 }
 var file_api_v1_instance_service_proto_depIdxs = []int32{
 	7,  // 0: memos.api.v1.InstanceSetting.general_setting:type_name -> memos.api.v1.InstanceSetting.GeneralSetting
 	8,  // 1: memos.api.v1.InstanceSetting.storage_setting:type_name -> memos.api.v1.InstanceSetting.StorageSetting
 	9,  // 2: memos.api.v1.InstanceSetting.memo_related_setting:type_name -> memos.api.v1.InstanceSetting.MemoRelatedSetting
 	4,  // 3: memos.api.v1.UpdateInstanceSettingRequest.setting:type_name -> memos.api.v1.InstanceSetting
-	12, // 4: memos.api.v1.UpdateInstanceSettingRequest.update_mask:type_name -> google.protobuf.FieldMask
+	13, // 4: memos.api.v1.UpdateInstanceSettingRequest.update_mask:type_name -> google.protobuf.FieldMask
 	10, // 5: memos.api.v1.InstanceSetting.GeneralSetting.custom_profile:type_name -> memos.api.v1.InstanceSetting.GeneralSetting.CustomProfile
-	1,  // 6: memos.api.v1.InstanceSetting.StorageSetting.storage_type:type_name -> memos.api.v1.InstanceSetting.StorageSetting.StorageType
-	11, // 7: memos.api.v1.InstanceSetting.StorageSetting.s3_config:type_name -> memos.api.v1.InstanceSetting.StorageSetting.S3Config
-	3,  // 8: memos.api.v1.InstanceService.GetInstanceProfile:input_type -> memos.api.v1.GetInstanceProfileRequest
-	5,  // 9: memos.api.v1.InstanceService.GetInstanceSetting:input_type -> memos.api.v1.GetInstanceSettingRequest
-	6,  // 10: memos.api.v1.InstanceService.UpdateInstanceSetting:input_type -> memos.api.v1.UpdateInstanceSettingRequest
-	2,  // 11: memos.api.v1.InstanceService.GetInstanceProfile:output_type -> memos.api.v1.InstanceProfile
-	4,  // 12: memos.api.v1.InstanceService.GetInstanceSetting:output_type -> memos.api.v1.InstanceSetting
-	4,  // 13: memos.api.v1.InstanceService.UpdateInstanceSetting:output_type -> memos.api.v1.InstanceSetting
-	11, // [11:14] is the sub-list for method output_type
-	8,  // [8:11] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	11, // 6: memos.api.v1.InstanceSetting.GeneralSetting.legal_notice:type_name -> memos.api.v1.InstanceSetting.GeneralSetting.LegalNotice
+	1,  // 7: memos.api.v1.InstanceSetting.StorageSetting.storage_type:type_name -> memos.api.v1.InstanceSetting.StorageSetting.StorageType
+	12, // 8: memos.api.v1.InstanceSetting.StorageSetting.s3_config:type_name -> memos.api.v1.InstanceSetting.StorageSetting.S3Config
+	3,  // 9: memos.api.v1.InstanceService.GetInstanceProfile:input_type -> memos.api.v1.GetInstanceProfileRequest
+	5,  // 10: memos.api.v1.InstanceService.GetInstanceSetting:input_type -> memos.api.v1.GetInstanceSettingRequest
+	6,  // 11: memos.api.v1.InstanceService.UpdateInstanceSetting:input_type -> memos.api.v1.UpdateInstanceSettingRequest
+	2,  // 12: memos.api.v1.InstanceService.GetInstanceProfile:output_type -> memos.api.v1.InstanceProfile
+	4,  // 13: memos.api.v1.InstanceService.GetInstanceSetting:output_type -> memos.api.v1.InstanceSetting
+	4,  // 14: memos.api.v1.InstanceService.UpdateInstanceSetting:output_type -> memos.api.v1.InstanceSetting
+	12, // [12:15] is the sub-list for method output_type
+	9,  // [9:12] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_api_v1_instance_service_proto_init() }
@@ -1031,7 +1136,7 @@ func file_api_v1_instance_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_v1_instance_service_proto_rawDesc), len(file_api_v1_instance_service_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   10,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

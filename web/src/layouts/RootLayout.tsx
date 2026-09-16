@@ -2,6 +2,7 @@ import { Suspense, useEffect, useMemo } from "react";
 import { Outlet, useLocation, useSearchParams } from "react-router-dom";
 import usePrevious from "react-use/lib/usePrevious";
 import Navigation from "@/components/Navigation";
+import PublicFooter from "@/components/PublicFooter";
 import Skeleton from "@/components/Skeleton";
 import { useInstance } from "@/contexts/InstanceContext";
 import { useMemoFilterContext } from "@/contexts/MemoFilterContext";
@@ -34,7 +35,7 @@ const RootLayout = () => {
   }, [prevPathname, pathname, searchParams, removeFilter]);
 
   return (
-    <div className="w-full min-h-full flex flex-row justify-center items-start sm:pl-16">
+    <div className="w-full min-h-svh flex flex-row justify-center items-start sm:pl-16">
       {sm && (
         <div
           className={cn(
@@ -46,10 +47,11 @@ const RootLayout = () => {
           <Navigation className="py-4 md:pt-6" collapsed={true} />
         </div>
       )}
-      <main className="w-full h-auto grow shrink flex flex-col justify-start items-center">
+      <main className="w-full min-h-svh grow shrink flex flex-col justify-start items-center">
         <Suspense fallback={<Skeleton type="route" />}>
           <Outlet />
         </Suspense>
+        <PublicFooter />
       </main>
     </div>
   );

@@ -52,12 +52,23 @@ message InstanceGeneralSetting {
   bool disallow_change_username = 8;
   // disallow_change_nickname disallows changing nickname.
   bool disallow_change_nickname = 9;
+  // legal_notice configures filing information displayed to signed-out visitors.
+  InstanceLegalNotice legal_notice = 10;
 }
 
 message InstanceCustomProfile {
   string title = 1;
   string description = 2;
   string logo_url = 3;
+}
+
+message InstanceLegalNotice {
+  bool display_icp_filing = 1;
+  string icp_filing_number = 2;
+  string icp_filing_url = 3;
+  bool display_public_security_filing = 4;
+  string public_security_filing_number = 5;
+  string public_security_filing_url = 6;
 }
 
 message InstanceStorageSetting {

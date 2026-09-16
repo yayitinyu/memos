@@ -171,6 +171,16 @@ func convertInstanceGeneralSettingFromStore(setting *storepb.InstanceGeneralSett
 			LogoUrl:     setting.CustomProfile.LogoUrl,
 		}
 	}
+	if setting.LegalNotice != nil {
+		generalSetting.LegalNotice = &v1pb.InstanceSetting_GeneralSetting_LegalNotice{
+			DisplayIcpFiling:            setting.LegalNotice.DisplayIcpFiling,
+			IcpFilingNumber:             setting.LegalNotice.IcpFilingNumber,
+			IcpFilingUrl:                setting.LegalNotice.IcpFilingUrl,
+			DisplayPublicSecurityFiling: setting.LegalNotice.DisplayPublicSecurityFiling,
+			PublicSecurityFilingNumber:  setting.LegalNotice.PublicSecurityFilingNumber,
+			PublicSecurityFilingUrl:     setting.LegalNotice.PublicSecurityFilingUrl,
+		}
+	}
 	return generalSetting
 }
 
@@ -192,6 +202,16 @@ func convertInstanceGeneralSettingToStore(setting *v1pb.InstanceSetting_GeneralS
 			Title:       setting.CustomProfile.Title,
 			Description: setting.CustomProfile.Description,
 			LogoUrl:     setting.CustomProfile.LogoUrl,
+		}
+	}
+	if setting.LegalNotice != nil {
+		generalSetting.LegalNotice = &storepb.InstanceLegalNotice{
+			DisplayIcpFiling:            setting.LegalNotice.DisplayIcpFiling,
+			IcpFilingNumber:             setting.LegalNotice.IcpFilingNumber,
+			IcpFilingUrl:                setting.LegalNotice.IcpFilingUrl,
+			DisplayPublicSecurityFiling: setting.LegalNotice.DisplayPublicSecurityFiling,
+			PublicSecurityFilingNumber:  setting.LegalNotice.PublicSecurityFilingNumber,
+			PublicSecurityFilingUrl:     setting.LegalNotice.PublicSecurityFilingUrl,
 		}
 	}
 	return generalSetting

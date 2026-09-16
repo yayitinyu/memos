@@ -132,7 +132,7 @@ func (x InstanceStorageSetting_StorageType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use InstanceStorageSetting_StorageType.Descriptor instead.
 func (InstanceStorageSetting_StorageType) EnumDescriptor() ([]byte, []int) {
-	return file_store_instance_setting_proto_rawDescGZIP(), []int{4, 0}
+	return file_store_instance_setting_proto_rawDescGZIP(), []int{5, 0}
 }
 
 type InstanceSetting struct {
@@ -331,8 +331,10 @@ type InstanceGeneralSetting struct {
 	DisallowChangeUsername bool `protobuf:"varint,8,opt,name=disallow_change_username,json=disallowChangeUsername,proto3" json:"disallow_change_username,omitempty"`
 	// disallow_change_nickname disallows changing nickname.
 	DisallowChangeNickname bool `protobuf:"varint,9,opt,name=disallow_change_nickname,json=disallowChangeNickname,proto3" json:"disallow_change_nickname,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	// legal_notice configures filing information displayed to signed-out visitors.
+	LegalNotice   *InstanceLegalNotice `protobuf:"bytes,10,opt,name=legal_notice,json=legalNotice,proto3" json:"legal_notice,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *InstanceGeneralSetting) Reset() {
@@ -421,6 +423,13 @@ func (x *InstanceGeneralSetting) GetDisallowChangeNickname() bool {
 	return false
 }
 
+func (x *InstanceGeneralSetting) GetLegalNotice() *InstanceLegalNotice {
+	if x != nil {
+		return x.LegalNotice
+	}
+	return nil
+}
+
 type InstanceCustomProfile struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
@@ -481,6 +490,90 @@ func (x *InstanceCustomProfile) GetLogoUrl() string {
 	return ""
 }
 
+type InstanceLegalNotice struct {
+	state                       protoimpl.MessageState `protogen:"open.v1"`
+	DisplayIcpFiling            bool                   `protobuf:"varint,1,opt,name=display_icp_filing,json=displayIcpFiling,proto3" json:"display_icp_filing,omitempty"`
+	IcpFilingNumber             string                 `protobuf:"bytes,2,opt,name=icp_filing_number,json=icpFilingNumber,proto3" json:"icp_filing_number,omitempty"`
+	IcpFilingUrl                string                 `protobuf:"bytes,3,opt,name=icp_filing_url,json=icpFilingUrl,proto3" json:"icp_filing_url,omitempty"`
+	DisplayPublicSecurityFiling bool                   `protobuf:"varint,4,opt,name=display_public_security_filing,json=displayPublicSecurityFiling,proto3" json:"display_public_security_filing,omitempty"`
+	PublicSecurityFilingNumber  string                 `protobuf:"bytes,5,opt,name=public_security_filing_number,json=publicSecurityFilingNumber,proto3" json:"public_security_filing_number,omitempty"`
+	PublicSecurityFilingUrl     string                 `protobuf:"bytes,6,opt,name=public_security_filing_url,json=publicSecurityFilingUrl,proto3" json:"public_security_filing_url,omitempty"`
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
+}
+
+func (x *InstanceLegalNotice) Reset() {
+	*x = InstanceLegalNotice{}
+	mi := &file_store_instance_setting_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InstanceLegalNotice) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InstanceLegalNotice) ProtoMessage() {}
+
+func (x *InstanceLegalNotice) ProtoReflect() protoreflect.Message {
+	mi := &file_store_instance_setting_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InstanceLegalNotice.ProtoReflect.Descriptor instead.
+func (*InstanceLegalNotice) Descriptor() ([]byte, []int) {
+	return file_store_instance_setting_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *InstanceLegalNotice) GetDisplayIcpFiling() bool {
+	if x != nil {
+		return x.DisplayIcpFiling
+	}
+	return false
+}
+
+func (x *InstanceLegalNotice) GetIcpFilingNumber() string {
+	if x != nil {
+		return x.IcpFilingNumber
+	}
+	return ""
+}
+
+func (x *InstanceLegalNotice) GetIcpFilingUrl() string {
+	if x != nil {
+		return x.IcpFilingUrl
+	}
+	return ""
+}
+
+func (x *InstanceLegalNotice) GetDisplayPublicSecurityFiling() bool {
+	if x != nil {
+		return x.DisplayPublicSecurityFiling
+	}
+	return false
+}
+
+func (x *InstanceLegalNotice) GetPublicSecurityFilingNumber() string {
+	if x != nil {
+		return x.PublicSecurityFilingNumber
+	}
+	return ""
+}
+
+func (x *InstanceLegalNotice) GetPublicSecurityFilingUrl() string {
+	if x != nil {
+		return x.PublicSecurityFilingUrl
+	}
+	return ""
+}
+
 type InstanceStorageSetting struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// storage_type is the storage type.
@@ -498,7 +591,7 @@ type InstanceStorageSetting struct {
 
 func (x *InstanceStorageSetting) Reset() {
 	*x = InstanceStorageSetting{}
-	mi := &file_store_instance_setting_proto_msgTypes[4]
+	mi := &file_store_instance_setting_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -510,7 +603,7 @@ func (x *InstanceStorageSetting) String() string {
 func (*InstanceStorageSetting) ProtoMessage() {}
 
 func (x *InstanceStorageSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_store_instance_setting_proto_msgTypes[4]
+	mi := &file_store_instance_setting_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -523,7 +616,7 @@ func (x *InstanceStorageSetting) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InstanceStorageSetting.ProtoReflect.Descriptor instead.
 func (*InstanceStorageSetting) Descriptor() ([]byte, []int) {
-	return file_store_instance_setting_proto_rawDescGZIP(), []int{4}
+	return file_store_instance_setting_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *InstanceStorageSetting) GetStorageType() InstanceStorageSetting_StorageType {
@@ -569,7 +662,7 @@ type StorageS3Config struct {
 
 func (x *StorageS3Config) Reset() {
 	*x = StorageS3Config{}
-	mi := &file_store_instance_setting_proto_msgTypes[5]
+	mi := &file_store_instance_setting_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -581,7 +674,7 @@ func (x *StorageS3Config) String() string {
 func (*StorageS3Config) ProtoMessage() {}
 
 func (x *StorageS3Config) ProtoReflect() protoreflect.Message {
-	mi := &file_store_instance_setting_proto_msgTypes[5]
+	mi := &file_store_instance_setting_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -594,7 +687,7 @@ func (x *StorageS3Config) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StorageS3Config.ProtoReflect.Descriptor instead.
 func (*StorageS3Config) Descriptor() ([]byte, []int) {
-	return file_store_instance_setting_proto_rawDescGZIP(), []int{5}
+	return file_store_instance_setting_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *StorageS3Config) GetAccessKeyId() string {
@@ -661,7 +754,7 @@ type InstanceMemoRelatedSetting struct {
 
 func (x *InstanceMemoRelatedSetting) Reset() {
 	*x = InstanceMemoRelatedSetting{}
-	mi := &file_store_instance_setting_proto_msgTypes[6]
+	mi := &file_store_instance_setting_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -673,7 +766,7 @@ func (x *InstanceMemoRelatedSetting) String() string {
 func (*InstanceMemoRelatedSetting) ProtoMessage() {}
 
 func (x *InstanceMemoRelatedSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_store_instance_setting_proto_msgTypes[6]
+	mi := &file_store_instance_setting_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -686,7 +779,7 @@ func (x *InstanceMemoRelatedSetting) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InstanceMemoRelatedSetting.ProtoReflect.Descriptor instead.
 func (*InstanceMemoRelatedSetting) Descriptor() ([]byte, []int) {
-	return file_store_instance_setting_proto_rawDescGZIP(), []int{6}
+	return file_store_instance_setting_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *InstanceMemoRelatedSetting) GetDisallowPublicVisibility() bool {
@@ -753,7 +846,7 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x14InstanceBasicSetting\x12\x1d\n" +
 	"\n" +
 	"secret_key\x18\x01 \x01(\tR\tsecretKey\x12%\n" +
-	"\x0eschema_version\x18\x02 \x01(\tR\rschemaVersion\"\xd6\x03\n" +
+	"\x0eschema_version\x18\x02 \x01(\tR\rschemaVersion\"\x9b\x04\n" +
 	"\x16InstanceGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -762,11 +855,20 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x0ecustom_profile\x18\x06 \x01(\v2\".memos.store.InstanceCustomProfileR\rcustomProfile\x121\n" +
 	"\x15week_start_day_offset\x18\a \x01(\x05R\x12weekStartDayOffset\x128\n" +
 	"\x18disallow_change_username\x18\b \x01(\bR\x16disallowChangeUsername\x128\n" +
-	"\x18disallow_change_nickname\x18\t \x01(\bR\x16disallowChangeNickname\"j\n" +
+	"\x18disallow_change_nickname\x18\t \x01(\bR\x16disallowChangeNickname\x12C\n" +
+	"\flegal_notice\x18\n" +
+	" \x01(\v2 .memos.store.InstanceLegalNoticeR\vlegalNotice\"j\n" +
 	"\x15InstanceCustomProfile\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x19\n" +
-	"\blogo_url\x18\x03 \x01(\tR\alogoUrl\"\xd3\x02\n" +
+	"\blogo_url\x18\x03 \x01(\tR\alogoUrl\"\xda\x02\n" +
+	"\x13InstanceLegalNotice\x12,\n" +
+	"\x12display_icp_filing\x18\x01 \x01(\bR\x10displayIcpFiling\x12*\n" +
+	"\x11icp_filing_number\x18\x02 \x01(\tR\x0ficpFilingNumber\x12$\n" +
+	"\x0eicp_filing_url\x18\x03 \x01(\tR\ficpFilingUrl\x12C\n" +
+	"\x1edisplay_public_security_filing\x18\x04 \x01(\bR\x1bdisplayPublicSecurityFiling\x12A\n" +
+	"\x1dpublic_security_filing_number\x18\x05 \x01(\tR\x1apublicSecurityFilingNumber\x12;\n" +
+	"\x1apublic_security_filing_url\x18\x06 \x01(\tR\x17publicSecurityFilingUrl\"\xd3\x02\n" +
 	"\x16InstanceStorageSetting\x12R\n" +
 	"\fstorage_type\x18\x01 \x01(\x0e2/.memos.store.InstanceStorageSetting.StorageTypeR\vstorageType\x12+\n" +
 	"\x11filepath_template\x18\x02 \x01(\tR\x10filepathTemplate\x12/\n" +
@@ -814,7 +916,7 @@ func file_store_instance_setting_proto_rawDescGZIP() []byte {
 }
 
 var file_store_instance_setting_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_store_instance_setting_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_store_instance_setting_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_store_instance_setting_proto_goTypes = []any{
 	(InstanceSettingKey)(0),                 // 0: memos.store.InstanceSettingKey
 	(InstanceStorageSetting_StorageType)(0), // 1: memos.store.InstanceStorageSetting.StorageType
@@ -822,24 +924,26 @@ var file_store_instance_setting_proto_goTypes = []any{
 	(*InstanceBasicSetting)(nil),            // 3: memos.store.InstanceBasicSetting
 	(*InstanceGeneralSetting)(nil),          // 4: memos.store.InstanceGeneralSetting
 	(*InstanceCustomProfile)(nil),           // 5: memos.store.InstanceCustomProfile
-	(*InstanceStorageSetting)(nil),          // 6: memos.store.InstanceStorageSetting
-	(*StorageS3Config)(nil),                 // 7: memos.store.StorageS3Config
-	(*InstanceMemoRelatedSetting)(nil),      // 8: memos.store.InstanceMemoRelatedSetting
+	(*InstanceLegalNotice)(nil),             // 6: memos.store.InstanceLegalNotice
+	(*InstanceStorageSetting)(nil),          // 7: memos.store.InstanceStorageSetting
+	(*StorageS3Config)(nil),                 // 8: memos.store.StorageS3Config
+	(*InstanceMemoRelatedSetting)(nil),      // 9: memos.store.InstanceMemoRelatedSetting
 }
 var file_store_instance_setting_proto_depIdxs = []int32{
 	0, // 0: memos.store.InstanceSetting.key:type_name -> memos.store.InstanceSettingKey
 	3, // 1: memos.store.InstanceSetting.basic_setting:type_name -> memos.store.InstanceBasicSetting
 	4, // 2: memos.store.InstanceSetting.general_setting:type_name -> memos.store.InstanceGeneralSetting
-	6, // 3: memos.store.InstanceSetting.storage_setting:type_name -> memos.store.InstanceStorageSetting
-	8, // 4: memos.store.InstanceSetting.memo_related_setting:type_name -> memos.store.InstanceMemoRelatedSetting
+	7, // 3: memos.store.InstanceSetting.storage_setting:type_name -> memos.store.InstanceStorageSetting
+	9, // 4: memos.store.InstanceSetting.memo_related_setting:type_name -> memos.store.InstanceMemoRelatedSetting
 	5, // 5: memos.store.InstanceGeneralSetting.custom_profile:type_name -> memos.store.InstanceCustomProfile
-	1, // 6: memos.store.InstanceStorageSetting.storage_type:type_name -> memos.store.InstanceStorageSetting.StorageType
-	7, // 7: memos.store.InstanceStorageSetting.s3_config:type_name -> memos.store.StorageS3Config
-	8, // [8:8] is the sub-list for method output_type
-	8, // [8:8] is the sub-list for method input_type
-	8, // [8:8] is the sub-list for extension type_name
-	8, // [8:8] is the sub-list for extension extendee
-	0, // [0:8] is the sub-list for field type_name
+	6, // 6: memos.store.InstanceGeneralSetting.legal_notice:type_name -> memos.store.InstanceLegalNotice
+	1, // 7: memos.store.InstanceStorageSetting.storage_type:type_name -> memos.store.InstanceStorageSetting.StorageType
+	8, // 8: memos.store.InstanceStorageSetting.s3_config:type_name -> memos.store.StorageS3Config
+	9, // [9:9] is the sub-list for method output_type
+	9, // [9:9] is the sub-list for method input_type
+	9, // [9:9] is the sub-list for extension type_name
+	9, // [9:9] is the sub-list for extension extendee
+	0, // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_store_instance_setting_proto_init() }
@@ -859,7 +963,7 @@ func file_store_instance_setting_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_store_instance_setting_proto_rawDesc), len(file_store_instance_setting_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   7,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
